@@ -6,6 +6,7 @@ const Enrollment = require('./Enrollment');
 const Coupon = require('./Coupon');
 const Progress = require('./Progress');
 const Teacher = require('./Teacher');
+const FreeVideo = require('./FreeVideo');
 
 module.exports = {
   Organization,
@@ -16,5 +17,6 @@ module.exports = {
   Coupon,
   Progress,
   Teacher,
+  FreeVideo,
 };
 
