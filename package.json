@@ -16,5 +16,8 @@
     "url": "https://github.com/lakxnaut/e-learning-backend/issues"
   },
   "homepage": "https://github.com/lakxnaut/e-learning-backend#readme",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5"
+  }
 }
