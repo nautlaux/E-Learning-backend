@@ -17,6 +17,7 @@ const getCourses = async (req, res) => {
         createdBy: 1,
         createdAt: 1,
         updatedAt: 1,
+        imageUrl: 1,
       },
     });
     return res.json(result);
