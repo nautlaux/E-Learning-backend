@@ -25,7 +25,7 @@ router.put('/questions/:questionId', updateQuestion);
 
 // Shared (Admin/App)
 router.get('/topics', listTopics);
-router.get('/topics/:topicId', getTopicWithQuestions);
+router.get('/topics/getAllQuestions/:topicId', getTopicWithQuestions);
 
 // App
 router.post('/attempts', startAttempt); // restart via { restart: true }

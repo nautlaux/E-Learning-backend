@@ -34,8 +34,12 @@ const verifyOtp = async (req, res) => {
     let user = await User.findOne(query);
 
     if (!user) {
-      // Create user after successful OTP verification
-      user = await User.create({ name, email, role, mobile, organizationId });
+      // Create user after successful OTP verification; include email only when provided
+      const payload = { name, role, mobile, organizationId };
+      if (email && email.trim()) {
+        payload.email = email;
+      }
+      user = await User.create(payload);
     }
 
     return res.json({ message: 'OTP verified', user });
