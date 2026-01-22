@@ -1,0 +1,32 @@
+const express = require('express');
+const {
+  createTopic,
+  addQuestion,
+  listTopics,
+  getTopicWithQuestions,
+  deleteTopic,
+  deleteQuestion,
+  startAttempt,
+  answerQuestion,
+  getAttempt,
+} = require('../controllers/quizController');
+
+const router = express.Router();
+
+// Admin
+router.post('/topics', createTopic);
+router.post('/topics/:topicId/questions', addQuestion);
+router.delete('/topics/:topicId', deleteTopic);
+router.delete('/questions/:questionId', deleteQuestion);
+
+// Shared (Admin/App)
+router.get('/topics', listTopics);
+router.get('/topics/:topicId', getTopicWithQuestions);
+
+// App
+router.post('/attempts', startAttempt); // restart via { restart: true }
+router.get('/attempts/:attemptId', getAttempt); // resume
+router.post('/attempts/:attemptId/answer', answerQuestion);
+
+module.exports = router;
+

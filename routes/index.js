@@ -3,6 +3,7 @@ const teacherRoutes = require('./teachers');
 const courseRoutes = require('./courses');
 const freeVideoRoutes = require('./freeVideos');
 const ctoBannerRoutes = require('./ctoBanners');
+const quizRoutes = require('./quizzes');
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.use('/teachers', teacherRoutes);
 router.use('/courses', courseRoutes);
 router.use('/free-videos', freeVideoRoutes);
 router.use('/cto-banners', ctoBannerRoutes);
+router.use('/quizzes', quizRoutes);
 
 module.exports = router;
 

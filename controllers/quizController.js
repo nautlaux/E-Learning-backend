@@ -1,0 +1,187 @@
+const { QuizTopic, QuizQuestion, QuizAttempt } = require('../models');
+const paginate = require('../utils/pagination');
+
+// Admin: create topic
+const createTopic = async (req, res) => {
+  try {
+    const { organizationId, title, description, isActive, createdBy } = req.body;
+    if (!organizationId || !title || !createdBy) {
+      return res.status(400).json({ message: 'organizationId, title, and createdBy are required' });
+    }
+    const topic = await QuizTopic.create({ organizationId, title, description, isActive, createdBy });
+    return res.status(201).json(topic);
+  } catch (err) {
+    console.error('createTopic error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin: add question to topic
+const addQuestion = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const { prompt, options, correctOptionIndex, order, isActive } = req.body;
+    if (!prompt || !options || options.length < 4 || correctOptionIndex === undefined) {
+      return res.status(400).json({ message: 'prompt, >=4 options, and correctOptionIndex are required' });
+    }
+    if (correctOptionIndex < 0 || correctOptionIndex >= options.length) {
+      return res.status(400).json({ message: 'correctOptionIndex must point to a valid option' });
+    }
+
+    const question = await QuizQuestion.create({
+      topicId,
+      prompt,
+      options,
+      correctOptionIndex,
+      order,
+      isActive: isActive !== undefined ? isActive : true,
+    });
+    return res.status(201).json(question);
+  } catch (err) {
+    console.error('addQuestion error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin/App: list topics
+const listTopics = async (req, res) => {
+  try {
+    const { page, limit, includeInactive } = req.query;
+    const filter = {};
+    if (!includeInactive || includeInactive === 'false') {
+      filter.isActive = true;
+    }
+    const result = await paginate(QuizTopic, {
+      filter,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+    });
+    return res.json(result);
+  } catch (err) {
+    console.error('listTopics error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin/App: get topic with questions
+const getTopicWithQuestions = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const topic = await QuizTopic.findById(topicId).lean();
+    if (!topic) return res.status(404).json({ message: 'Topic not found' });
+
+    const questions = await QuizQuestion.find({ topicId, isActive: true })
+      .sort({ order: 1, createdAt: 1 })
+      .lean();
+
+    return res.json({ ...topic, questions });
+  } catch (err) {
+    console.error('getTopicWithQuestions error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin: delete topic (and its questions)
+const deleteTopic = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const deleted = await QuizTopic.findByIdAndDelete(topicId);
+    await QuizQuestion.deleteMany({ topicId });
+    if (!deleted) return res.status(404).json({ message: 'Topic not found' });
+    return res.json({ message: 'Topic and its questions deleted' });
+  } catch (err) {
+    console.error('deleteTopic error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin: delete question
+const deleteQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const deleted = await QuizQuestion.findByIdAndDelete(questionId);
+    if (!deleted) return res.status(404).json({ message: 'Question not found' });
+    return res.json({ message: 'Question deleted' });
+  } catch (err) {
+    console.error('deleteQuestion error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// App: start or restart attempt
+const startAttempt = async (req, res) => {
+  try {
+    const { userId, topicId, restart } = req.body;
+    if (!userId || !topicId) {
+      return res.status(400).json({ message: 'userId and topicId are required' });
+    }
+
+    let attempt = await QuizAttempt.findOne({ userId, topicId });
+    if (!attempt) {
+      attempt = await QuizAttempt.create({ userId, topicId });
+    } else if (restart) {
+      attempt.status = 'IN_PROGRESS';
+      attempt.currentQuestionIndex = 0;
+      attempt.answers = [];
+      attempt.restartedAt = new Date();
+      await attempt.save();
+    }
+    return res.json(attempt);
+  } catch (err) {
+    console.error('startAttempt error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// App: answer current question (resume-friendly)
+const answerQuestion = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const { questionId, selectedOptionIndex } = req.body;
+    const attempt = await QuizAttempt.findById(attemptId);
+    if (!attempt) return res.status(404).json({ message: 'Attempt not found' });
+    if (attempt.status === 'COMPLETED') return res.status(400).json({ message: 'Attempt already completed' });
+
+    const question = await QuizQuestion.findById(questionId);
+    if (!question) return res.status(404).json({ message: 'Question not found' });
+
+    attempt.answers.push({ questionId, selectedOptionIndex });
+    const topicQuestionsCount = await QuizQuestion.countDocuments({ topicId: attempt.topicId, isActive: true });
+    attempt.currentQuestionIndex = attempt.answers.length;
+    if (attempt.answers.length >= topicQuestionsCount) {
+      attempt.status = 'COMPLETED';
+    }
+    await attempt.save();
+    return res.json(attempt);
+  } catch (err) {
+    console.error('answerQuestion error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// App: get attempt (for resume)
+const getAttempt = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const attempt = await QuizAttempt.findById(attemptId).lean();
+    if (!attempt) return res.status(404).json({ message: 'Attempt not found' });
+    return res.json(attempt);
+  } catch (err) {
+    console.error('getAttempt error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = {
+  createTopic,
+  addQuestion,
+  listTopics,
+  getTopicWithQuestions,
+  deleteTopic,
+  deleteQuestion,
+  startAttempt,
+  answerQuestion,
+  getAttempt,
+};
+

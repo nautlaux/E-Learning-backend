@@ -8,6 +8,9 @@ const Progress = require('./Progress');
 const Teacher = require('./Teacher');
 const FreeVideo = require('./FreeVideo');
 const CtoBanner = require('./CtoBanner');
+const QuizTopic = require('./QuizTopic');
+const QuizQuestion = require('./QuizQuestion');
+const QuizAttempt = require('./QuizAttempt');
 
 module.exports = {
   Organization,
@@ -20,5 +23,8 @@ module.exports = {
   Teacher,
   FreeVideo,
   CtoBanner,
+  QuizTopic,
+  QuizQuestion,
+  QuizAttempt,
 };
 
