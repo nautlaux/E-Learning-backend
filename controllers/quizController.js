@@ -58,14 +58,45 @@ const listTopics = async (req, res) => {
       sort: { createdAt: -1 },
     });
 
-    // Decorate with attempt flag when userId is provided (app use-case)
+    // Decorate with attempt flag and counts when userId is provided (app use-case)
     if (userId && result.data?.length) {
       const topicIds = result.data.map((t) => t._id);
-      const attempts = await QuizAttempt.find({ userId, topicId: { $in: topicIds } }, { topicId: 1 }).lean();
-      const attemptedSet = new Set(attempts.map((a) => String(a.topicId)));
+      const [attempts, totalCounts] = await Promise.all([
+        QuizAttempt.find({ userId, topicId: { $in: topicIds } }, { topicId: 1, answers: 1 }).lean(),
+        QuizQuestion.aggregate([
+          { $match: { topicId: { $in: topicIds } } },
+          { $group: { _id: '$topicId', totalQuestions: { $sum: 1 } } },
+        ]),
+      ]);
+
+      const attemptedMap = new Map(
+        attempts.map((a) => [String(a.topicId), { hasAttempted: true, answersCount: a.answers?.length || 0 }])
+      );
+      const totalMap = new Map(totalCounts.map((c) => [String(c._id), c.totalQuestions || 0]));
+
       result.data = result.data.map((t) => {
         const obj = t.toObject ? t.toObject() : t;
-        obj.hasAttempted = attemptedSet.has(String(obj._id));
+        const topicIdStr = String(obj._id);
+        const attemptInfo = attemptedMap.get(topicIdStr) || { hasAttempted: false, answersCount: 0 };
+        obj.hasAttempted = attemptInfo.hasAttempted;
+        obj.totalQuestions = totalMap.get(topicIdStr) || 0;
+        obj.totalAnswers = attemptInfo.answersCount;
+        return obj;
+      });
+    } else if (result.data?.length) {
+      // No userId provided: still show totalQuestions, answers=0, hasAttempted=false
+      const topicIds = result.data.map((t) => t._id);
+      const totalCounts = await QuizQuestion.aggregate([
+        { $match: { topicId: { $in: topicIds } } },
+        { $group: { _id: '$topicId', totalQuestions: { $sum: 1 } } },
+      ]);
+      const totalMap = new Map(totalCounts.map((c) => [String(c._id), c.totalQuestions || 0]));
+      result.data = result.data.map((t) => {
+        const obj = t.toObject ? t.toObject() : t;
+        const topicIdStr = String(obj._id);
+        obj.hasAttempted = false;
+        obj.totalQuestions = totalMap.get(topicIdStr) || 0;
+        obj.totalAnswers = 0;
         return obj;
       });
     }
