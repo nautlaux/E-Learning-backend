@@ -6,6 +6,8 @@ const {
   getTopicWithQuestions,
   deleteTopic,
   deleteQuestion,
+  updateTopic,
+  updateQuestion,
   startAttempt,
   answerQuestion,
   getAttempt,
@@ -18,6 +20,8 @@ router.post('/topics', createTopic);
 router.post('/topics/:topicId/questions', addQuestion);
 router.delete('/topics/:topicId', deleteTopic);
 router.delete('/questions/:questionId', deleteQuestion);
+router.put('/topics/:topicId', updateTopic);
+router.put('/questions/:questionId', updateQuestion);
 
 // Shared (Admin/App)
 router.get('/topics', listTopics);

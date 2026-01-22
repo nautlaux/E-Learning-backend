@@ -4,6 +4,7 @@ const courseRoutes = require('./courses');
 const freeVideoRoutes = require('./freeVideos');
 const ctoBannerRoutes = require('./ctoBanners');
 const quizRoutes = require('./quizzes');
+const authRoutes = require('./auth');
 
 const router = express.Router();
 
@@ -16,6 +17,7 @@ router.use('/courses', courseRoutes);
 router.use('/free-videos', freeVideoRoutes);
 router.use('/cto-banners', ctoBannerRoutes);
 router.use('/quizzes', quizRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;
 

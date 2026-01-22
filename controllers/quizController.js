@@ -46,7 +46,7 @@ const addQuestion = async (req, res) => {
 // Admin/App: list topics
 const listTopics = async (req, res) => {
   try {
-    const { page, limit, includeInactive } = req.query;
+    const { page, limit, includeInactive, userId } = req.query;
     const filter = {};
     if (!includeInactive || includeInactive === 'false') {
       filter.isActive = true;
@@ -57,6 +57,19 @@ const listTopics = async (req, res) => {
       limit,
       sort: { createdAt: -1 },
     });
+
+    // Decorate with attempt flag when userId is provided (app use-case)
+    if (userId && result.data?.length) {
+      const topicIds = result.data.map((t) => t._id);
+      const attempts = await QuizAttempt.find({ userId, topicId: { $in: topicIds } }, { topicId: 1 }).lean();
+      const attemptedSet = new Set(attempts.map((a) => String(a.topicId)));
+      result.data = result.data.map((t) => {
+        const obj = t.toObject ? t.toObject() : t;
+        obj.hasAttempted = attemptedSet.has(String(obj._id));
+        return obj;
+      });
+    }
+
     return res.json(result);
   } catch (err) {
     console.error('listTopics error:', err);
@@ -105,6 +118,63 @@ const deleteQuestion = async (req, res) => {
     return res.json({ message: 'Question deleted' });
   } catch (err) {
     console.error('deleteQuestion error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin: update topic
+const updateTopic = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+    const { title, description, isActive } = req.body;
+    const updated = await QuizTopic.findByIdAndUpdate(
+      topicId,
+      {
+        $set: {
+          ...(title !== undefined ? { title } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(isActive !== undefined ? { isActive } : {}),
+        },
+      },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Topic not found' });
+    return res.json(updated);
+  } catch (err) {
+    console.error('updateTopic error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Admin: update question
+const updateQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { prompt, options, correctOptionIndex, order, isActive } = req.body;
+
+    if (options && options.length < 4) {
+      return res.status(400).json({ message: 'At least 4 options are required' });
+    }
+    if (correctOptionIndex !== undefined && options && correctOptionIndex >= options.length) {
+      return res.status(400).json({ message: 'correctOptionIndex must point to a valid option' });
+    }
+
+    const payload = {};
+    if (prompt !== undefined) payload.prompt = prompt;
+    if (options !== undefined) payload.options = options;
+    if (correctOptionIndex !== undefined) payload.correctOptionIndex = correctOptionIndex;
+    if (order !== undefined) payload.order = order;
+    if (isActive !== undefined) payload.isActive = isActive;
+
+    const updated = await QuizQuestion.findByIdAndUpdate(
+      questionId,
+      { $set: payload },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Question not found' });
+    return res.json(updated);
+  } catch (err) {
+    console.error('updateQuestion error:', err);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -183,5 +253,7 @@ module.exports = {
   startAttempt,
   answerQuestion,
   getAttempt,
+  updateQuestion,
+  updateTopic,
 };
 
