@@ -70,17 +70,21 @@ const listTopics = async (req, res) => {
       ]);
 
       const attemptedMap = new Map(
-        attempts.map((a) => [String(a.topicId), { hasAttempted: true, answersCount: a.answers?.length || 0 }])
+        attempts.map((a) => [
+          String(a.topicId),
+          { hasAttempted: true, answersCount: a.answers?.length || 0, attemptId: a._id },
+        ])
       );
       const totalMap = new Map(totalCounts.map((c) => [String(c._id), c.totalQuestions || 0]));
 
       result.data = result.data.map((t) => {
         const obj = t.toObject ? t.toObject() : t;
         const topicIdStr = String(obj._id);
-        const attemptInfo = attemptedMap.get(topicIdStr) || { hasAttempted: false, answersCount: 0 };
+        const attemptInfo = attemptedMap.get(topicIdStr) || { hasAttempted: false, answersCount: 0, attemptId: '' };
         obj.hasAttempted = attemptInfo.hasAttempted;
         obj.totalQuestions = totalMap.get(topicIdStr) || 0;
         obj.totalAnswers = attemptInfo.answersCount;
+        obj.attemptId = attemptInfo.attemptId || '';
         return obj;
       });
     } else if (result.data?.length) {
@@ -97,6 +101,7 @@ const listTopics = async (req, res) => {
         obj.hasAttempted = false;
         obj.totalQuestions = totalMap.get(topicIdStr) || 0;
         obj.totalAnswers = 0;
+        obj.attemptId = '';
         return obj;
       });
     }
