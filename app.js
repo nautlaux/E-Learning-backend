@@ -1,12 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
+const apiLogger = require('./middlewares/logger');
 
 const app = express();
 
 // Allow CORS for frontend clients (adjust origin as needed)
 app.use(cors());
 app.use(express.json());
+app.use(apiLogger);
 app.use('/api', routes);
 
 module.exports = app;
