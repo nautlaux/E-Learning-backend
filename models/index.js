@@ -11,6 +11,7 @@ const CtoBanner = require('./CtoBanner');
 const QuizTopic = require('./QuizTopic');
 const QuizQuestion = require('./QuizQuestion');
 const QuizAttempt = require('./QuizAttempt');
+const CourseSubscription = require('./CourseSubscription');
 
 module.exports = {
   Organization,
@@ -26,5 +27,6 @@ module.exports = {
   QuizTopic,
   QuizQuestion,
   QuizAttempt,
+  CourseSubscription,
 };
 

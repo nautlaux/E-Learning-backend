@@ -1,4 +1,5 @@
 const { User } = require('../models');
+const jwt = require('jsonwebtoken');
 
 // Unified auth: accepts mobile and role; returns whether user exists and sends static OTP 1234
 const authWithOtp = async (req, res) => {
@@ -42,7 +43,14 @@ const verifyOtp = async (req, res) => {
       user = await User.create(payload);
     }
 
-    return res.json({ message: 'OTP verified', user });
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, organizationId: user.organizationId },
+      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+      { expiresIn: '30d' }
+    );
+
+    return res.json({ message: 'OTP verified', user, token });
   } catch (err) {
     console.error('verifyOtp error:', err);
     return res.status(500).json({ message: 'Internal server error' });

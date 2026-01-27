@@ -6,6 +6,8 @@ const ctoBannerRoutes = require('./ctoBanners');
 const quizRoutes = require('./quizzes');
 const authRoutes = require('./auth');
 const salesRoutes = require('./sales');
+const subscriptionRoutes = require('./subscriptions');
+const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -13,13 +15,17 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-router.use('/teachers', teacherRoutes);
-router.use('/courses', courseRoutes);
-router.use('/free-videos', freeVideoRoutes);
-router.use('/cto-banners', ctoBannerRoutes);
-router.use('/quizzes', quizRoutes);
+// Public routes (no auth required)
 router.use('/auth', authRoutes);
-router.use('/sales', salesRoutes);
+
+// Protected routes (require JWT token)
+router.use('/teachers', authenticate, teacherRoutes);
+router.use('/courses', authenticate, courseRoutes);
+router.use('/free-videos', authenticate, freeVideoRoutes);
+router.use('/cto-banners', authenticate, ctoBannerRoutes);
+router.use('/quizzes', authenticate, quizRoutes);
+router.use('/sales', authenticate, salesRoutes);
+router.use('/subscriptions', authenticate, subscriptionRoutes);
 
 module.exports = router;
 
