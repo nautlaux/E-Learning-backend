@@ -1,6 +1,7 @@
 const Organization = require('./Organization');
 const User = require('./User');
 const Course = require('./Course');
+const Chapter = require('./Chapter');
 const Lesson = require('./Lesson');
 const Enrollment = require('./Enrollment');
 const Coupon = require('./Coupon');
@@ -17,6 +18,7 @@ module.exports = {
   Organization,
   User,
   Course,
+  Chapter,
   Lesson,
   Enrollment,
   Coupon,

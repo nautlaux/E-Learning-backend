@@ -16,6 +16,8 @@ const authenticate = async (req, res, next) => {
       process.env.JWT_SECRET
     );
 
+    console.log('decoded', decoded);
+
     // Optionally verify user still exists
     const user = await User.findById(decoded.userId);
     if (!user) {

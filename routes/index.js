@@ -7,6 +7,8 @@ const quizRoutes = require('./quizzes');
 const authRoutes = require('./auth');
 const salesRoutes = require('./sales');
 const subscriptionRoutes = require('./subscriptions');
+const dashboardRoutes = require('./dashboard');
+const progressRoutes = require('./progress');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -26,6 +28,8 @@ router.use('/cto-banners', authenticate, ctoBannerRoutes);
 router.use('/quizzes', authenticate, quizRoutes);
 router.use('/sales', authenticate, salesRoutes);
 router.use('/subscriptions', authenticate, subscriptionRoutes);
+router.use('/dashboard', authenticate, dashboardRoutes);
+router.use('/progress', authenticate, progressRoutes);
 
 module.exports = router;
 

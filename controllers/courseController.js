@@ -35,9 +35,13 @@ const getCourseById = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    const lessons = await Lesson.find({ courseId })
-      .sort({ chapterOrder: 1, order: 1 })
-      .lean();
+    let lessons = await Lesson.find({ courseId }).populate('chapterId', 'title order').lean();
+    lessons = lessons.sort((a, b) => {
+      const o1 = (a.chapterId && a.chapterId.order) != null ? a.chapterId.order : 0;
+      const o2 = (b.chapterId && b.chapterId.order) != null ? b.chapterId.order : 0;
+      if (o1 !== o2) return o1 - o2;
+      return (a.order ?? 0) - (b.order ?? 0);
+    });
 
     return res.json({ ...course, lessons });
   } catch (err) {
