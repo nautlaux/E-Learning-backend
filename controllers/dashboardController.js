@@ -1,4 +1,5 @@
-const { CtoBanner, Course, Enrollment, Progress, FreeVideo } = require('../models');
+const { CtoBanner, Course, Enrollment, Progress, FreeVideo, DashboardConfig } = require('../models');
+const { defaultSections, defaultAddons } = require('./dashboardConfigController');
 
 /**
  * Single dashboard API: banners (CAROUSEL + INLINE), most popular courses,
@@ -120,8 +121,56 @@ const getDashboard = async (req, res) => {
       .limit(10)
       .lean();
 
-    // Popup Banner hardcoded
-    const popupBanner = {
+    const courseDataSources = [popularCourses, recommendedCourses];
+
+    let config = await DashboardConfig.findOne({ organizationId }).lean();
+    const sectionsConfig = config?.sections?.length ? config.sections : defaultSections();
+    const addonsFromConfig = config?.addons && typeof config.addons === 'object' ? config.addons : defaultAddons();
+
+    const orderedSections = sectionsConfig
+      .filter((s) => s.isActive !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    let courseSectionIndex = 0;
+    const getDataForSection = (s) => {
+      if (s.key === 'course') {
+        const data = courseDataSources[courseSectionIndex % courseDataSources.length] ?? [];
+        courseSectionIndex += 1;
+        return data;
+      }
+      if (s.key === 'continue') return continueCourses;
+      if (s.key === 'freeVideos') return freeVideos;
+      if (s.key === 'banner') return [];
+      return [];
+    };
+
+    let sections = orderedSections.map((s) => ({
+      key: s.key,
+      title: s.title,
+      subtitle: s.subtitle ?? '',
+      order: s.order,
+      data: getDataForSection(s),
+    }));
+
+    // Insert one random inline banner between 2nd and 3rd course section
+    const courseIndices = sections.map((s, i) => (s.key === 'course' ? i : null)).filter((i) => i != null);
+    if (courseIndices.length >= 2 && inlineBanners.length > 0) {
+      const insertAfter = courseIndices[Math.random() < 0.5 ? 1 : Math.min(2, courseIndices.length - 1)];
+      const randomBanner = inlineBanners[Math.floor(Math.random() * inlineBanners.length)];
+      const bannerBlock = {
+        key: 'banner',
+        title: 'Banner',
+        subtitle: '',
+        order: 0,
+        data: [randomBanner],
+      };
+      sections = [...sections.slice(0, insertAfter + 1), bannerBlock, ...sections.slice(insertAfter + 1)];
+    }
+
+    // Ensure unique order: 1, 2, 3, ...
+    sections = sections.map((s, i) => ({ ...s, order: i + 1 }));
+
+    const popupBanner = addonsFromConfig.popup || {
       title: 'Welcome to the dashboard',
       description: 'This is a popup banner',
       imageUrl: 'https://png.pngtree.com/png-clipart/20220404/original/pngtree-supper-sale-discount-shopping-pop-up-banner-png-image_7515944.png',
@@ -129,15 +178,12 @@ const getDashboard = async (req, res) => {
     };
 
     return res.json({
-      banners: {
+      addons: {
+        ...addonsFromConfig,
         carousel: carouselBanners,
-        inline: inlineBanners,
         popup: popupBanner,
       },
-      mostPopularCourses: popularCourses,
-      recommendedCourses,
-      continueCourses,
-      freeVideos,
+      sections,
     });
   } catch (err) {
     console.error('getDashboard error:', err);

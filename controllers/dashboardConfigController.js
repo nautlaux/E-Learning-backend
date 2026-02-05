@@ -1,0 +1,81 @@
+const { DashboardConfig, CtoBanner } = require('../models');
+
+const defaultSections = () => [
+  { key: 'course', title: 'Most Popular Courses', subtitle: 'Discover our most popular courses', order: 1, bannerId: null, isActive: true },
+  { key: 'course', title: 'Recommended Courses', subtitle: 'Discover our recommended courses', order: 2, bannerId: null, isActive: true },
+  { key: 'banner', title: 'Banner', subtitle: '', order: 3, bannerId: null, isActive: true },
+  { key: 'continue', title: 'Continue Courses', subtitle: 'Continue your learning', order: 4, bannerId: null, isActive: true },
+  { key: 'freeVideos', title: 'Free Videos', subtitle: 'Discover our free videos', order: 5, bannerId: null, isActive: true },
+];
+
+const defaultAddons = () => ({
+  language: 'english,hindi,bhojpuri,telugu,kannada,malayalam,punjabi,urdu,sindhi,gujarati,odia,tamil,bengali,marathi',
+  darkMode: true,
+  theme: 'light,dark',
+  font: 'Roboto,Arial,Helvetica,sans-serif',
+  fontSize: '14px',
+  fontWeight: '400',
+  fontColor: '#000000',
+  backgroundColor: '#ffffff',
+  borderRadius: '10px',
+  primaryColor: '#000000',
+  secondaryColor: '#ffffff',
+});
+
+/** Admin: get dashboard config (sections order, titles, bannerIds) */
+const getConfig = async (req, res) => {
+  try {
+    const organizationId = req.user?.organizationId || req.query.organizationId;
+    if (!organizationId) return res.status(400).json({ message: 'organizationId required' });
+
+    let config = await DashboardConfig.findOne({ organizationId }).lean();
+    if (!config) {
+      config = {
+        organizationId,
+        sections: defaultSections(),
+        addons: defaultAddons(),
+      };
+    }
+    const inlineBanners = await CtoBanner.find({ organizationId, type: 'INLINE', isActive: true })
+      .select('_id title ctaText ctaUrl imageUrl type')
+      .lean();
+    return res.json({ ...config, inlineBanners });
+  } catch (err) {
+    console.error('getConfig error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/** Admin: update dashboard config (drag-drop order, titles, subtitles, bannerId per section, addons) */
+const updateConfig = async (req, res) => {
+  try {
+    const organizationId = req.user?.organizationId || req.body.organizationId;
+    if (!organizationId) return res.status(400).json({ message: 'organizationId required' });
+
+    const { sections, addons } = req.body;
+    const update = {};
+    if (Array.isArray(sections)) {
+      update.sections = sections.map((s) => ({
+        key: s.key,
+        title: s.title || s.key,
+        subtitle: s.subtitle != null ? s.subtitle : '',
+        order: typeof s.order === 'number' ? s.order : 0,
+        bannerId: s.bannerId || null,
+        isActive: s.isActive !== false,
+      }));
+    }
+    if (addons && typeof addons === 'object') update.addons = addons;
+
+    const config = await DashboardConfig.findOneAndUpdate(
+      { organizationId },
+      { $set: update },
+      { new: true, upsert: true }
+    ).lean();
+    return res.json(config);
+  } catch (err) {
+    console.error('updateConfig error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getConfig, updateConfig, defaultSections, defaultAddons };
