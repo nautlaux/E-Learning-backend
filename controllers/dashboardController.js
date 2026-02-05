@@ -173,7 +173,7 @@ const getDashboard = async (req, res) => {
     const popupBanner = addonsFromConfig.popup || {
       title: 'Welcome to the dashboard',
       description: 'This is a popup banner',
-      imageUrl: 'https://png.pngtree.com/png-clipart/20220404/original/pngtree-supper-sale-discount-shopping-pop-up-banner-png-image_7515944.png',
+      imageUrl: 'https://i.ytimg.com/vi/qOFIvVZBw38/hqdefault.jpg?sqp=-oaymwEnCNACELwBSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLA5tZjoPOcNq7-QiPkqWqNFfEf3BA',
       link: 'https://www.google.com',
     };
 
