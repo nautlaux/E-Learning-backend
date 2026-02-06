@@ -9,6 +9,8 @@ const salesRoutes = require('./sales');
 const subscriptionRoutes = require('./subscriptions');
 const dashboardRoutes = require('./dashboard');
 const progressRoutes = require('./progress');
+const analyticsRoutes = require('./analytics');
+const newsRoutes = require('./news');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -30,6 +32,8 @@ router.use('/sales', authenticate, salesRoutes);
 router.use('/subscriptions', authenticate, subscriptionRoutes);
 router.use('/dashboard', authenticate, dashboardRoutes);
 router.use('/progress', authenticate, progressRoutes);
+router.use('/analytics', authenticate, analyticsRoutes);
+router.use('/news', authenticate, newsRoutes);
 
 module.exports = router;
 

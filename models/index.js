@@ -14,6 +14,7 @@ const QuizQuestion = require('./QuizQuestion');
 const QuizAttempt = require('./QuizAttempt');
 const CourseSubscription = require('./CourseSubscription');
 const DashboardConfig = require('./DashboardConfig');
+const News = require('./News');
 
 module.exports = {
   Organization,
@@ -32,5 +33,6 @@ module.exports = {
   QuizAttempt,
   CourseSubscription,
   DashboardConfig,
+  News,
 };
 
