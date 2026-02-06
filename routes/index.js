@@ -11,6 +11,7 @@ const dashboardRoutes = require('./dashboard');
 const progressRoutes = require('./progress');
 const analyticsRoutes = require('./analytics');
 const newsRoutes = require('./news');
+const userRoutes = require('./user');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -34,6 +35,7 @@ router.use('/dashboard', authenticate, dashboardRoutes);
 router.use('/progress', authenticate, progressRoutes);
 router.use('/analytics', authenticate, analyticsRoutes);
 router.use('/news', authenticate, newsRoutes);
+router.use('/user', authenticate, userRoutes);
 
 module.exports = router;
 

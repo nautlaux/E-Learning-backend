@@ -7,6 +7,7 @@ const userSchema = new Schema(
     role: { type: String, enum: ['SUPER_ADMIN', 'ORG_ADMIN', 'SALES', 'USER'], required: true },
     mobile: { type: String,required: true, trim: true }, // phone login; uniqueness enforced per role below
     organizationId: { type: Types.ObjectId, ref: 'Organization', default: null },
+    avatarUrl: { type: String, default: '', trim: true },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
