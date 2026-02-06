@@ -1,5 +1,5 @@
 const express = require('express');
-const { getCourses, getCourseById } = require('../controllers/courseController');
+const { getCourses, getCourseById, getMyEnrolledCourses } = require('../controllers/courseController');
 const {
   createLesson,
   listLessonsByCourse,
@@ -17,6 +17,7 @@ const {
 const router = express.Router();
 
 router.get('/', getCourses);
+router.get('/my', getMyEnrolledCourses);
 router.get('/:courseId/chapters', listChaptersByCourse);
 router.post('/:courseId/chapters', createChapter);
 router.put('/:courseId/chapters/:chapterId', updateChapter);

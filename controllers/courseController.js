@@ -1,4 +1,4 @@
-const { Course, Lesson } = require('../models');
+const { Course, Lesson, Enrollment, Progress } = require('../models');
 const paginate = require('../utils/pagination');
 
 const getCourses = async (req, res) => {
@@ -50,5 +50,54 @@ const getCourseById = async (req, res) => {
   }
 };
 
-module.exports = { getCourses, getCourseById };
+/** GET for app: current user's enrolled (bought) courses with progress */
+const getMyEnrolledCourses = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const { page, limit } = req.query;
+    const filter = { userId, status: 'ACTIVE' };
+    const result = await paginate(Enrollment, {
+      filter,
+      page,
+      limit,
+      sort: { createdAt: -1 },
+      populate: [{ path: 'courseId', select: 'title description basePrice imageUrl organizationId isPublished' }],
+    });
+
+    if (!result.data?.length) {
+      return res.json(result);
+    }
+
+    const courseIds = result.data.map((e) => e.courseId?._id).filter(Boolean);
+    const progressList = await Progress.find(
+      { userId, courseId: { $in: courseIds } },
+      { courseId: 1, completionPercentage: 1 }
+    ).lean();
+    const progressMap = new Map(progressList.map((p) => [String(p.courseId), p.completionPercentage ?? 0]));
+
+    const data = result.data.map((e) => {
+      const course = e.courseId;
+      if (!course) return null;
+      const c = typeof course.toObject === 'function' ? course.toObject() : course;
+      return {
+        ...c,
+        enrolledAt: e.createdAt,
+        finalPricePaid: e.finalPricePaid,
+        status: e.status,
+        completionPercentage: progressMap.get(String(c._id)) ?? 0,
+      };
+    }).filter(Boolean);
+
+    return res.json({ ...result, data });
+  } catch (err) {
+    console.error('getMyEnrolledCourses error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+module.exports = { getCourses, getCourseById, getMyEnrolledCourses };
 
