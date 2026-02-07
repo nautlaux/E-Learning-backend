@@ -16,6 +16,7 @@ const CourseSubscription = require('./CourseSubscription');
 const DashboardConfig = require('./DashboardConfig');
 const News = require('./News');
 const Notification = require('./Notification');
+const AppModuleConfig = require('./AppModuleConfig');
 
 module.exports = {
   Organization,
@@ -36,5 +37,6 @@ module.exports = {
   DashboardConfig,
   News,
   Notification,
+  AppModuleConfig,
 };
 

@@ -13,6 +13,7 @@ const analyticsRoutes = require('./analytics');
 const newsRoutes = require('./news');
 const userRoutes = require('./user');
 const notificationRoutes = require('./notifications');
+const appModuleRoutes = require('./appModules');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -23,6 +24,7 @@ router.get('/health', (req, res) => {
 
 // Public routes (no auth required)
 router.use('/auth', authRoutes);
+router.use('/app-modules', appModuleRoutes);
 
 // Protected routes (require JWT token)
 router.use('/teachers', authenticate, teacherRoutes);
