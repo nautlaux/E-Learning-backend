@@ -14,6 +14,7 @@ const newsRoutes = require('./news');
 const userRoutes = require('./user');
 const notificationRoutes = require('./notifications');
 const appModuleRoutes = require('./appModules');
+const shortVideoRoutes = require('./shortVideos');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -40,6 +41,7 @@ router.use('/analytics', authenticate, analyticsRoutes);
 router.use('/news', authenticate, newsRoutes);
 router.use('/user', authenticate, userRoutes);
 router.use('/notifications', authenticate, notificationRoutes);
+router.use('/short-videos', authenticate, shortVideoRoutes);
 
 module.exports = router;
 

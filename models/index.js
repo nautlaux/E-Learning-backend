@@ -17,6 +17,7 @@ const DashboardConfig = require('./DashboardConfig');
 const News = require('./News');
 const Notification = require('./Notification');
 const AppModuleConfig = require('./AppModuleConfig');
+const ShortVideo = require('./ShortVideo');
 
 module.exports = {
   Organization,
@@ -38,5 +39,6 @@ module.exports = {
   News,
   Notification,
   AppModuleConfig,
+  ShortVideo,
 };
 
