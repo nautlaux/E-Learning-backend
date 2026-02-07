@@ -24,9 +24,9 @@ router.get('/health', (req, res) => {
 
 // Public routes (no auth required)
 router.use('/auth', authRoutes);
-router.use('/app-modules', appModuleRoutes);
 
 // Protected routes (require JWT token)
+router.use('/app-modules',authenticate, appModuleRoutes);
 router.use('/teachers', authenticate, teacherRoutes);
 router.use('/courses', authenticate, courseRoutes);
 router.use('/free-videos', authenticate, freeVideoRoutes);
