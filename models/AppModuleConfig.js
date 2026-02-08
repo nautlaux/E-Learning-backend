@@ -10,6 +10,7 @@ const appModuleConfigSchema = new Schema(
     tools: { type: Boolean, default: true },
     news: { type: Boolean, default: true },
     banners: { type: Boolean, default: true },
+    shortVideos:{ type: Boolean, default: true },
   },
   { timestamps: true }
 );
