@@ -1,30 +1,36 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
+const { NO_TOKEN, INVALID_TOKEN, TOKEN_EXPIRED, USER_NOT_FOUND } = require('../constants/authErrors');
 
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'No token provided or invalid format' });
+      return res.status(401).json(NO_TOKEN);
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const token = authHeader.substring(7);
+    const secret = process.env.JWT_SECRET;
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json(TOKEN_EXPIRED);
+      }
+      if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json(INVALID_TOKEN);
+      }
+      throw err;
+    }
 
-    console.log('decoded', decoded);
-
-    // Optionally verify user still exists
     const user = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+      return res.status(401).json(USER_NOT_FOUND);
     }
 
-    // Attach user info to request
     req.user = {
       userId: decoded.userId,
       role: decoded.role,
@@ -33,12 +39,6 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token expired' });
-    }
     console.error('Auth middleware error:', err);
     return res.status(500).json({ message: 'Internal server error' });
   }

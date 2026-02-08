@@ -1,6 +1,9 @@
 const { User } = require('../models');
 const jwt = require('jsonwebtoken');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_EXPIRY = process.env.JWT_EXPIRY || '30d';
+
 // Unified auth: accepts mobile and role; returns whether user exists and sends static OTP 1234
 const authWithOtp = async (req, res) => {
   try {
@@ -43,11 +46,11 @@ const verifyOtp = async (req, res) => {
       user = await User.create(payload);
     }
 
-    // Generate JWT token
+    // Generate JWT token (expiry from env: JWT_EXPIRY, e.g. 15m, 1h, 7d)
     const token = jwt.sign(
       { userId: user._id, role: user.role, organizationId: user.organizationId },
-      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: '30d' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRY }
     );
 
     return res.json({ message: 'OTP verified', user, token });
@@ -57,8 +60,45 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+/** Refresh token: accepts expired or valid access token, returns new token. Frontend calls after TOKEN_EXPIRED. */
+const refreshToken = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const tokenFromHeader = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    const token = tokenFromHeader || req.body?.token;
+
+    if (!token) {
+      return res.status(401).json({ success: false, code: 'NO_TOKEN', message: 'No token provided or invalid format' });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+    } catch (err) {
+      return res.status(401).json({ success: false, code: 'INVALID_TOKEN', message: 'Invalid token' });
+    }
+
+    const user = await User.findById(decoded.userId).lean();
+    if (!user) {
+      return res.status(401).json({ success: false, code: 'USER_NOT_FOUND', message: 'User not found' });
+    }
+
+    const newToken = jwt.sign(
+      { userId: user._id, role: user.role, organizationId: user.organizationId },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRY }
+    );
+
+    return res.json({ success: true, token: newToken, user });
+  } catch (err) {
+    console.error('refreshToken error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   authWithOtp,
   verifyOtp,
+  refreshToken,
 };
 

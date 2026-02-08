@@ -1,5 +1,6 @@
 // Short Videos – MongoDB shell: insert 30 docs (rotate 4 YouTube Shorts links)
 // Replace YOUR_DB_NAME, ORGANIZATION_OBJECT_ID, CREATED_BY_USER_OBJECT_ID before running.
+// cURL examples: see docs/SHORT_VIDEOS_CURL_AND_MONGO.md
 
 use YOUR_DB_NAME;
 
