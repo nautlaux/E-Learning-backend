@@ -9,7 +9,8 @@ const DEFAULT_MODULES = {
   tools: true,
   news: true,
   banners: true,
-  shortVideos: true,
+  shortVideos: true, 
+  aiChat: true,
 };  
 
 /** GET /api/app-modules – dynamic module visibility for frontend */
@@ -27,6 +28,7 @@ const getAppModules = async (req, res) => {
           news: config.news ?? DEFAULT_MODULES.news,
           banners: config.banners ?? DEFAULT_MODULES.banners,
           shortVideos: config.shortVideos ?? DEFAULT_MODULES.shortVideos,
+          aiChat : config.aiChat ?? DEFAULT_MODULES.aiChat,
         }
       : { ...DEFAULT_MODULES };
 
