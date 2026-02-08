@@ -1,4 +1,4 @@
-const { AnalyticsClick } = require('../analytics');
+const { AnalyticsClick, AnalyticsLogEvent } = require('../analytics');
 
 const GRID_SIZE_DEFAULT = 10;
 
@@ -108,8 +108,40 @@ const getScreens = async (req, res) => {
   }
 };
 
+/** POST /api/analytics/log-event – custom event logging (screen_view, shorts_view, etc.) */
+const logEvent = async (req, res) => {
+  try {
+    const { event_name, parameters, phone_number, timestamp } = req.body;
+
+    if (!event_name || typeof event_name !== 'string' || !event_name.trim()) {
+      return res.status(400).json({ success: false, message: 'event_name is required and must be a non-empty string' });
+    }
+
+    const eventTimestamp = timestamp ? new Date(timestamp) : new Date();
+    if (Number.isNaN(eventTimestamp.getTime())) {
+      return res.status(400).json({ success: false, message: 'timestamp must be a valid ISO 8601 date string' });
+    }
+
+    const doc = {
+      organizationId: req.user?.organizationId || null,
+      userId: req.user?.userId || null,
+      event_name: event_name.trim(),
+      parameters: parameters && typeof parameters === 'object' ? parameters : {},
+      phone_number: phone_number != null ? String(phone_number).trim() : '',
+      event_timestamp: eventTimestamp,
+    };
+
+    await AnalyticsLogEvent.create(doc);
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('logEvent error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   recordClicks,
   getHeatmap,
   getScreens,
+  logEvent,
 };

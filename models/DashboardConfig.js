@@ -4,14 +4,15 @@ const sectionSchema = new Schema(
   {
     key: {
       type: String,
-      enum: ['course', 'continue', 'freeVideos', 'banner'],
+      enum: ['course', 'continue', 'freeVideos', 'banner', 'shorts'],
       required: true,
     },
     title: { type: String, required: true, trim: true },
     subtitle: { type: String, default: '', trim: true },
     order: { type: Number, required: true },
-    bannerId: { type: Types.ObjectId, ref: 'CtoBanner', default: null },
     isActive: { type: Boolean, default: true },
+    // For key === 'course': 'popular' | 'recommended'. Backend uses this to pick data source and return in GET /dashboard.
+    sectionType: { type: String, enum: ['popular', 'recommended'], default: null },
   },
   { _id: true }
 );
@@ -22,11 +23,12 @@ const dashboardConfigSchema = new Schema(
     sections: {
       type: [sectionSchema],
       default: () => [
-        { key: 'course', title: 'Most Popular Courses', subtitle: 'Discover our most popular courses', order: 1, isActive: true },
-        { key: 'course', title: 'Recommended Courses', subtitle: 'Discover our recommended courses', order: 2, isActive: true },
+        { key: 'course', title: 'Most Popular Courses', subtitle: 'Discover our most popular courses', order: 1, isActive: true, sectionType: 'popular' },
+        { key: 'course', title: 'Recommended Courses', subtitle: 'Discover our recommended courses', order: 2, isActive: true, sectionType: 'recommended' },
         { key: 'banner', title: 'Banner', subtitle: '', order: 3, isActive: true },
         { key: 'continue', title: 'Continue Courses', subtitle: 'Continue your learning', order: 4, isActive: true },
         { key: 'freeVideos', title: 'Free Videos', subtitle: 'Discover our free videos', order: 5, isActive: true },
+        { key: 'shorts', title: 'Shorts', subtitle: 'Short videos & reels', order: 6, isActive: true },
       ],
     },
     addons: {

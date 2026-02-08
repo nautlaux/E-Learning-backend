@@ -1,11 +1,12 @@
 const { DashboardConfig, CtoBanner } = require('../models');
 
 const defaultSections = () => [
-  { key: 'course', title: 'Most Popular Courses', subtitle: 'Discover our most popular courses', order: 1, bannerId: null, isActive: true },
-  { key: 'course', title: 'Recommended Courses', subtitle: 'Discover our recommended courses', order: 2, bannerId: null, isActive: true },
-  { key: 'banner', title: 'Banner', subtitle: '', order: 3, bannerId: null, isActive: true },
-  { key: 'continue', title: 'Continue Courses', subtitle: 'Continue your learning', order: 4, bannerId: null, isActive: true },
-  { key: 'freeVideos', title: 'Free Videos', subtitle: 'Discover our free videos', order: 5, bannerId: null, isActive: true },
+  { key: 'course', title: 'Most Popular Courses', subtitle: 'Discover our most popular courses', order: 1, isActive: true, sectionType: 'popular' },
+  { key: 'course', title: 'Recommended Courses', subtitle: 'Discover our recommended courses', order: 2, isActive: true, sectionType: 'recommended' },
+  { key: 'banner', title: 'Banner', subtitle: '', order: 3, isActive: true },
+  { key: 'continue', title: 'Continue Courses', subtitle: 'Continue your learning', order: 4, isActive: true },
+  { key: 'freeVideos', title: 'Free Videos', subtitle: 'Discover our free videos', order: 5, isActive: true },
+  { key: 'shorts', title: 'Shorts', subtitle: 'Short videos & reels', order: 6, isActive: true },
 ];
 
 const defaultAddons = () => ({
@@ -22,7 +23,7 @@ const defaultAddons = () => ({
   secondaryColor: '#ffffff',
 });
 
-/** Admin: get dashboard config (sections order, titles, bannerIds) */
+/** Admin: get dashboard config (sections order, titles) */
 const getConfig = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.query.organizationId;
@@ -46,7 +47,7 @@ const getConfig = async (req, res) => {
   }
 };
 
-/** Admin: update dashboard config (drag-drop order, titles, subtitles, bannerId per section, addons) */
+/** Admin: update dashboard config (drag-drop order, titles, subtitles, addons) */
 const updateConfig = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.body.organizationId;
@@ -60,8 +61,8 @@ const updateConfig = async (req, res) => {
         title: s.title || s.key,
         subtitle: s.subtitle != null ? s.subtitle : '',
         order: typeof s.order === 'number' ? s.order : 0,
-        bannerId: s.bannerId || null,
         isActive: s.isActive !== false,
+        sectionType: s.key === 'course' && (s.sectionType === 'popular' || s.sectionType === 'recommended') ? s.sectionType : null,
       }));
     }
     if (addons && typeof addons === 'object') update.addons = addons;

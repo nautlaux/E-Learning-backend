@@ -1,4 +1,4 @@
-const { CtoBanner, Course, Enrollment, Progress, FreeVideo, DashboardConfig } = require('../models');
+const { CtoBanner, Course, Enrollment, Progress, FreeVideo, ShortVideo, DashboardConfig } = require('../models');
 const { defaultSections, defaultAddons } = require('./dashboardConfigController');
 
 /**
@@ -121,6 +121,12 @@ const getDashboard = async (req, res) => {
       .limit(10)
       .lean();
 
+    // 6 Shorts (reel-style short videos)
+    const shorts = await ShortVideo.find({ organizationId, isActive: true })
+      .sort({ order: 1, createdAt: -1 })
+      .limit(20)
+      .lean();
+
     const courseDataSources = [popularCourses, recommendedCourses];
 
     let config = await DashboardConfig.findOne({ organizationId }).lean();
@@ -134,23 +140,32 @@ const getDashboard = async (req, res) => {
     let courseSectionIndex = 0;
     const getDataForSection = (s) => {
       if (s.key === 'course') {
-        const data = courseDataSources[courseSectionIndex % courseDataSources.length] ?? [];
+        // Use sectionType from config if set; else fallback by order (first=popular, second=recommended)
+        const sectionType = s.sectionType === 'popular' || s.sectionType === 'recommended'
+          ? s.sectionType
+          : (courseSectionIndex === 0 ? 'popular' : 'recommended');
+        const data = sectionType === 'popular' ? (courseDataSources[0] ?? []) : (courseDataSources[1] ?? []);
         courseSectionIndex += 1;
-        return data;
+        return { data, sectionType };
       }
-      if (s.key === 'continue') return continueCourses;
-      if (s.key === 'freeVideos') return freeVideos;
-      if (s.key === 'banner') return [];
-      return [];
+      if (s.key === 'continue') return { data: continueCourses };
+      if (s.key === 'freeVideos') return { data: freeVideos };
+      if (s.key === 'shorts') return { data: shorts, sectionType: 'shorts' };
+      if (s.key === 'banner') return { data: [] };
+      return { data: [] };
     };
 
-    let sections = orderedSections.map((s) => ({
-      key: s.key,
-      title: s.title,
-      subtitle: s.subtitle ?? '',
-      order: s.order,
-      data: getDataForSection(s),
-    }));
+    let sections = orderedSections.map((s) => {
+      const result = getDataForSection(s);
+      return {
+        key: s.key,
+        title: s.title,
+        subtitle: s.subtitle ?? '',
+        order: s.order,
+        ...(result.sectionType != null && { sectionType: result.sectionType }),
+        data: result.data,
+      };
+    });
 
     // Insert one random inline banner between 2nd and 3rd course section
     const courseIndices = sections.map((s, i) => (s.key === 'course' ? i : null)).filter((i) => i != null);
