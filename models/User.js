@@ -9,6 +9,8 @@ const userSchema = new Schema(
     organizationId: { type: Types.ObjectId, ref: 'Organization', default: null },
     avatarUrl: { type: String, default: '', trim: true },
     isActive: { type: Boolean, default: true },
+    // Last known FCM token for push notifications
+    fcmToken: { type: String, default: '', trim: true },
   },
   { timestamps: true }
 );

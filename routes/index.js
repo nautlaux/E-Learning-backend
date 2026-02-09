@@ -15,6 +15,7 @@ const userRoutes = require('./user');
 const notificationRoutes = require('./notifications');
 const appModuleRoutes = require('./appModules');
 const shortVideoRoutes = require('./shortVideos');
+const { logInstall } = require('../controllers/analyticsController');
 const authenticate = require('../middlewares/auth');
 
 const router = express.Router();
@@ -25,8 +26,9 @@ router.get('/health', (req, res) => {
 
 // Public routes (no auth required)
 router.use('/auth', authRoutes);
-
+router.post('/analytics/log-install', logInstall);
 router.use('/app-modules', appModuleRoutes);
+
 // Protected routes (require JWT token)
 router.use('/teachers', authenticate, teacherRoutes);
 router.use('/courses', authenticate, courseRoutes);

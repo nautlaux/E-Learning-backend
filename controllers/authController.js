@@ -30,7 +30,16 @@ const authWithOtp = async (req, res) => {
 // Verify OTP: accepts mobile+role or userId, static otp 1234
 const verifyOtp = async (req, res) => {
   try {
-    const { mobile, role = 'USER', userId, otp, name = '', email = '', organizationId = null } = req.body;
+    const {
+      mobile,
+      role = 'USER',
+      userId,
+      otp,
+      name = '',
+      email = '',
+      organizationId = null,
+      fcm_token,
+    } = req.body;
     if (!otp) return res.status(400).json({ message: 'otp is required' });
     if (otp !== '1234') return res.status(400).json({ message: 'Invalid OTP' });
 
@@ -43,7 +52,17 @@ const verifyOtp = async (req, res) => {
       if (email && email.trim()) {
         payload.email = email;
       }
+      if (fcm_token && typeof fcm_token === 'string' && fcm_token.trim()) {
+        payload.fcmToken = fcm_token.trim();
+      }
       user = await User.create(payload);
+    } else if (fcm_token && typeof fcm_token === 'string' && fcm_token.trim()) {
+      // Update existing user's FCM token
+      const cleanedToken = fcm_token.trim();
+      if (user.fcmToken !== cleanedToken) {
+        user.fcmToken = cleanedToken;
+        await user.save();
+      }
     }
 
     // Generate JWT token (expiry from env: JWT_EXPIRY, e.g. 15m, 1h, 7d)

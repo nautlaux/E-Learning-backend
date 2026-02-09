@@ -21,3 +21,4 @@ analyticsLogEventSchema.index({ event_name: 1, event_timestamp: -1 });
 analyticsLogEventSchema.index({ userId: 1, event_timestamp: -1 });
 
 module.exports = model('AnalyticsLogEvent', analyticsLogEventSchema);
+

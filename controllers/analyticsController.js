@@ -1,4 +1,4 @@
-const { AnalyticsClick, AnalyticsLogEvent } = require('../analytics');
+const { AnalyticsClick, AnalyticsLogEvent, AnalyticsInstall } = require('../analytics');
 
 const GRID_SIZE_DEFAULT = 10;
 
@@ -139,9 +139,39 @@ const logEvent = async (req, res) => {
   }
 };
 
+/** POST /api/analytics/log-install – public install source tracking (no auth required) */
+const logInstall = async (req, res) => {
+  try {
+    const { timestamp, parameters } = req.body || {};
+
+    if (!timestamp) {
+      return res.status(400).json({ success: false, message: 'timestamp is required' });
+    }
+    const ts = new Date(timestamp);
+    if (Number.isNaN(ts.getTime())) {
+      return res.status(400).json({ success: false, message: 'timestamp must be a valid ISO 8601 date string' });
+    }
+
+    if (!parameters || typeof parameters !== 'object') {
+      return res.status(400).json({ success: false, message: 'parameters is required and must be an object' });
+    }
+
+    await AnalyticsInstall.create({
+      timestamp: ts,
+      parameters,
+    });
+
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('logInstall error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   recordClicks,
   getHeatmap,
   getScreens,
   logEvent,
+  logInstall,
 };
