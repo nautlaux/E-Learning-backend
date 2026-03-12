@@ -16,7 +16,7 @@ const sendOtpPhoneNumber = async (email) => {
   "method": "POST",
   "hostname": "control.msg91.com",
   "port": null,
-  "path": `/api/v5/otp?template_id=69a1bd9911e1047fff03ad09&mobile=${email}&authkey=418362AQv48ESE9660a4865P1&otp=${otp}&invisible=&otp_length=4`,
+  "path": `/api/v5/otp?template_id=660a480cd6fc056a6f10fb42&mobile=${email}&authkey=418362AQv48ESE9660a4865P1&otp=${otp}&invisible=&otp_length=4`,
   "headers": {
     "Content-Type": "application/JSON"
   }
