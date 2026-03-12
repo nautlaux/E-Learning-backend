@@ -11,6 +11,7 @@ const userSchema = new Schema(
     isActive: { type: Boolean, default: true },
     // Last known FCM token for push notifications
     fcmToken: { type: String, default: '', trim: true },
+    device_id: { type: String, default: '', trim: true },
   },
   { timestamps: true }
 );

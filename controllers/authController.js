@@ -1,25 +1,74 @@
 const { User } = require('../models');
 const jwt = require('jsonwebtoken');
+const AppOtp = require('../models/AppOtp');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '30d';
 
-// Unified auth: accepts mobile and role; returns whether user exists and sends static OTP 1234
+function generateOtp() { var Otp = ''; for (i = 1; i <= 4; i++) { Otp += Math.floor(Math.random() * 9); } return Otp; }
+
+const sendOtpPhoneNumber = async (email) => {
+  console.log('-----------',email,'-----')
+  var otp = generateOtp();
+  var email = `91${email}`;
+  const http = require('https');
+  const options = {
+  "method": "POST",
+  "hostname": "control.msg91.com",
+  "port": null,
+  "path": `/api/v5/otp?template_id=69a1bd9911e1047fff03ad09&mobile=${email}&authkey=418362AQv48ESE9660a4865P1&otp=${otp}&invisible=&otp_length=4`,
+  "headers": {
+    "Content-Type": "application/JSON"
+  }
+};
+  const req = http.request(options, (res) => {
+      const chunks = [];
+      res.on('data', (chunk) => {
+          chunks.push(chunk);
+      });
+      res.on('end', () => {
+          const body = Buffer.concat(chunks);
+      });
+  });
+
+  req.write('{\n  "Param1": "value1",\n  "Param2": "value2",\n  "Param3": "value3"\n}');
+  req.end();
+  console.log('response---',req)
+  console.log('status---',otp)
+  return ({
+      status: true,
+      otp,
+  });
+};
+
+// Unified auth: accepts mobile and role; returns whether user exists and sends OTP via MSG91
 const authWithOtp = async (req, res) => {
   try {
-    const { mobile, role = 'USER'} = req.body;
+    const { mobile, role = 'USER' } = req.body;
     if (!mobile) {
       return res.status(400).json({ message: 'mobile is required' });
     }
 
-    let user = await User.findOne({ mobile, role });
+    const user = await User.findOne({ mobile, role });
     const exists = !!user;
 
+    const response = await sendOtpPhoneNumber(mobile);
+    if (!response || !response.status) {
+      console.error('Failed to send OTP via MSG91', response);
+      return res.status(500).json({ message: 'Failed to send OTP', status: false });
+    }
+
+    await AppOtp.findOneAndUpdate(
+      { phone: mobile },
+      { $set: { otp: response.otp, role } },
+      { upsert: true, returnOriginal: false }
+    );
+
     return res.json({
-      message: 'OTP sent',
+      message: 'OTP send SuccessFully !!',
+      status: true,
       userExists: exists,
       userId: user ? user._id : null,
-      // pendingUser: !exists ? { name, email, role, mobile, organizationId } : undefined,
     });
   } catch (err) {
     console.error('authentication error:', err);
@@ -32,35 +81,60 @@ const verifyOtp = async (req, res) => {
   try {
     const {
       mobile,
-      role = 'USER',
+      role,
       userId,
       otp,
       name = '',
       email = '',
-      organizationId = null,
+      organizationId = '6972184e424ea4761fff6655',
       fcm_token,
+      device_id,
     } = req.body;
+    if (!mobile || !role) return res.status(400).json({ message: 'mobile or role are required' });
     if (!otp) return res.status(400).json({ message: 'otp is required' });
-    if (otp !== '1234') return res.status(400).json({ message: 'Invalid OTP' });
-
+    const appOtp = await AppOtp.findOne({ phone: mobile, role });
+    if (!appOtp) return res.status(400).json({ message: 'Invalid Mobile or role' });
+    if (appOtp.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
+    await AppOtp.deleteOne({ _id: appOtp._id });
     const query = userId ? { _id: userId } : { mobile, role };
     let user = await User.findOne(query);
 
     if (!user) {
       // Create user after successful OTP verification; include email only when provided
       const payload = { name, role, mobile, organizationId };
-      if (email && email.trim()) {
-        payload.email = email;
+      if (typeof email === 'string' && email.trim()) {
+        payload.email = email.trim();
       }
       if (fcm_token && typeof fcm_token === 'string' && fcm_token.trim()) {
         payload.fcmToken = fcm_token.trim();
       }
+      if (device_id && typeof device_id === 'string' && device_id.trim()) {
+        payload.device_id = device_id.trim();
+      }
       user = await User.create(payload);
-    } else if (fcm_token && typeof fcm_token === 'string' && fcm_token.trim()) {
-      // Update existing user's FCM token
-      const cleanedToken = fcm_token.trim();
-      if (user.fcmToken !== cleanedToken) {
-        user.fcmToken = cleanedToken;
+    } else {
+      let shouldSave = false;
+
+      if (device_id && typeof device_id === 'string' && device_id.trim()) {
+        const cleanedDeviceId = device_id.trim();
+        if (user.device_id && user.device_id !== cleanedDeviceId) {
+          return res.status(400).json({ message: 'Login not allowed from a different device' });
+        }
+        if (!user.device_id) {
+          user.device_id = cleanedDeviceId;
+          shouldSave = true;
+        }
+      }
+
+      if (fcm_token && typeof fcm_token === 'string' && fcm_token.trim()) {
+        const cleanedToken = fcm_token.trim();
+        if (user.fcmToken !== cleanedToken) {
+          user.fcmToken = cleanedToken;
+          shouldSave = true;
+        }
+      }
+
+      if (shouldSave) {
         await user.save();
       }
     }
