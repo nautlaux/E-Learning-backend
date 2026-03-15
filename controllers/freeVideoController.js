@@ -1,6 +1,7 @@
 const { FreeVideo } = require('../models');
 const paginate = require('../utils/pagination');
 
+// POST /api/free-videos
 const createFreeVideo = async (req, res) => {
   try {
     const { organizationId, title, description, videoUrl, thumbnailUrl, durationSeconds, tags, isPublished, createdBy } =
@@ -29,6 +30,7 @@ const createFreeVideo = async (req, res) => {
   }
 };
 
+// GET /api/free-videos
 const listFreeVideos = async (req, res) => {
   try {
     const { page, limit, includeUnpublished } = req.query;
@@ -61,6 +63,7 @@ const listFreeVideos = async (req, res) => {
   }
 };
 
+// GET /api/free-videos/:videoId
 const getFreeVideoById = async (req, res) => {
   try {
     const { videoId } = req.params;

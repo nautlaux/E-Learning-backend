@@ -23,7 +23,7 @@ const defaultAddons = () => ({
   secondaryColor: '#ffffff',
 });
 
-/** Admin: get dashboard config (sections order, titles) */
+// GET /api/dashboard/config
 const getConfig = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.query.organizationId;
@@ -47,7 +47,7 @@ const getConfig = async (req, res) => {
   }
 };
 
-/** Admin: update dashboard config (drag-drop order, titles, subtitles, addons) */
+// PUT /api/dashboard/config
 const updateConfig = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.body.organizationId;

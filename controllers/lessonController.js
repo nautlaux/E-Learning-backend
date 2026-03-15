@@ -10,6 +10,7 @@ const createDefaultChapter = async (courseId) => {
   return newChapter;
 };
 
+// POST /api/courses/:courseId/lessons
 const createLesson = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -56,6 +57,7 @@ const createLesson = async (req, res) => {
   }
 };
 
+// GET /api/courses/:courseId/lessons
 const listLessonsByCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -96,6 +98,7 @@ const listLessonsByCourse = async (req, res) => {
   }
 };
 
+// GET /api/courses/:courseId/lessons/:lessonId
 const getLessonById = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
@@ -110,6 +113,7 @@ const getLessonById = async (req, res) => {
   }
 };
 
+// PUT /api/courses/:courseId/lessons/:lessonId
 const updateLesson = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;
@@ -144,6 +148,7 @@ const updateLesson = async (req, res) => {
   }
 };
 
+// DELETE /api/courses/:courseId/lessons/:lessonId
 const deleteLesson = async (req, res) => {
   try {
     const { courseId, lessonId } = req.params;

@@ -1,6 +1,6 @@
 const { Progress } = require('../models');
 
-// Create or update progress for a user + course
+// POST /api/progress
 const upsertProgress = async (req, res) => {
   try {
     const { userId, courseId, completedLessons = [], completionPercentage = 0 } = req.body;

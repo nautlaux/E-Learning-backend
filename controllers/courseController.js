@@ -1,6 +1,7 @@
 const { Course, Lesson, Enrollment, Progress } = require('../models');
 const paginate = require('../utils/pagination');
 
+// GET /api/courses
 const getCourses = async (req, res) => {
   try {
     const { page, limit } = req.query;
@@ -27,6 +28,7 @@ const getCourses = async (req, res) => {
   }
 };
 
+// GET /api/courses/:courseId
 const getCourseById = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -50,7 +52,7 @@ const getCourseById = async (req, res) => {
   }
 };
 
-/** GET for app: current user's enrolled (bought) courses with progress */
+// GET /api/courses/my
 const getMyEnrolledCourses = async (req, res) => {
   try {
     const userId = req.user?.userId;

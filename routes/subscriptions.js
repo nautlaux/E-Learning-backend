@@ -5,10 +5,14 @@ const {
   getSubscription,
   updateSubscription,
   cancelSubscription,
+  checkMySubscriptionStatus,
   getUserSubscriptions,
 } = require('../controllers/subscriptionController');
 
 const router = express.Router();
+
+// Current user: check if subscription is active (must be before /:subscriptionId)
+router.get('/me/status', checkMySubscriptionStatus);
 
 // Subscription CRUD
 router.post('/', createSubscription);

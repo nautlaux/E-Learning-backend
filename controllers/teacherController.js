@@ -1,6 +1,7 @@
 const { Teacher } = require('../models');
 const paginate = require('../utils/pagination');
 
+// POST /api/teachers
 const createTeacher = async (req, res) => {
   try {
     const { organizationId, name, expertise, bio, userId, isActive } = req.body;
@@ -27,6 +28,7 @@ const createTeacher = async (req, res) => {
   }
 };
 
+// GET /api/teachers
 const getAllTeachers = async (req, res) => {
   try {
     const { page, limit } = req.query;

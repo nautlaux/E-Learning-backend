@@ -2,7 +2,7 @@ const { AnalyticsClick, AnalyticsLogEvent, AnalyticsInstall } = require('../anal
 
 const GRID_SIZE_DEFAULT = 10;
 
-/** Record one or many click events (app sends xPercent, yPercent 0-100) */
+// POST /api/analytics/clicks
 const recordClicks = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.body.organizationId;
@@ -45,7 +45,7 @@ const recordClicks = async (req, res) => {
   }
 };
 
-/** Get heatmap grid for admin: counts per cell (gridSize x gridSize) */
+// GET /api/analytics/heatmap
 const getHeatmap = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.query.organizationId;
@@ -86,7 +86,7 @@ const getHeatmap = async (req, res) => {
   }
 };
 
-/** List distinct (screenName, sectionKey) for org (admin dropdowns) */
+// GET /api/analytics/screens
 const getScreens = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId || req.query.organizationId;
@@ -108,7 +108,7 @@ const getScreens = async (req, res) => {
   }
 };
 
-/** POST /api/analytics/log-event – custom event logging (screen_view, shorts_view, etc.) */
+// POST /api/analytics/log-event
 const logEvent = async (req, res) => {
   try {
     const { event_name, parameters, phone_number, timestamp } = req.body;
@@ -139,7 +139,7 @@ const logEvent = async (req, res) => {
   }
 };
 
-/** POST /api/analytics/log-install – public install source tracking (no auth required) */
+// POST /api/analytics/log-install
 const logInstall = async (req, res) => {
   try {
     const { timestamp, parameters } = req.body || {};

@@ -1,5 +1,6 @@
 const { User, Enrollment, Progress, QuizAttempt } = require('../models');
 
+// GET /api/user/profile
 const getProfile = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -39,6 +40,7 @@ const getProfile = async (req, res) => {
   }
 };
 
+// PUT /api/user/profile
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user?.userId;

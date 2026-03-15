@@ -1,7 +1,7 @@
 const { Notification } = require('../models');
 const paginate = require('../utils/pagination');
 
-/** Create notification (admin / system / Firebase webhook) */
+// POST /api/notifications
 const createNotification = async (req, res) => {
   try {
     const { userId, title, body, source, linkUrl, imageUrl, data } = req.body;
@@ -27,7 +27,7 @@ const createNotification = async (req, res) => {
   }
 };
 
-/** List current user's notifications (read/unread filter, paginated) */
+// GET /api/notifications
 const listMyNotifications = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -55,7 +55,7 @@ const listMyNotifications = async (req, res) => {
   }
 };
 
-/** Unread count for badge */
+// GET /api/notifications/unread-count
 const getUnreadCount = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -71,7 +71,7 @@ const getUnreadCount = async (req, res) => {
   }
 };
 
-/** Mark one as read */
+// PATCH /api/notifications/:notificationId/read
 const markAsRead = async (req, res) => {
   try {
     const userId = req.user?.userId;
@@ -96,7 +96,7 @@ const markAsRead = async (req, res) => {
   }
 };
 
-/** Mark all as read for current user */
+// PATCH /api/notifications/read-all
 const markAllAsRead = async (req, res) => {
   try {
     const userId = req.user?.userId;

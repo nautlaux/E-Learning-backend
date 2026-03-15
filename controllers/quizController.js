@@ -1,7 +1,7 @@
 const { QuizTopic, QuizQuestion, QuizAttempt } = require('../models');
 const paginate = require('../utils/pagination');
 
-// Admin: create topic
+// POST /api/quizzes/topics
 const createTopic = async (req, res) => {
   try {
     const { organizationId, title, description, isActive, createdBy } = req.body;
@@ -16,7 +16,7 @@ const createTopic = async (req, res) => {
   }
 };
 
-// Admin: add question to topic
+// POST /api/quizzes/topics/:topicId/questions
 const addQuestion = async (req, res) => {
   try {
     const { topicId } = req.params;
@@ -43,7 +43,7 @@ const addQuestion = async (req, res) => {
   }
 };
 
-// Admin/App: list topics
+// GET /api/quizzes/topics
 const listTopics = async (req, res) => {
   try {
     const { page, limit, includeInactive, userId } = req.query;
@@ -113,7 +113,7 @@ const listTopics = async (req, res) => {
   }
 };
 
-// Admin/App: get topic with questions
+// GET /api/quizzes/topics/getAllQuestions/:topicId
 const getTopicWithQuestions = async (req, res) => {
   try {
     const { topicId } = req.params;
@@ -131,7 +131,7 @@ const getTopicWithQuestions = async (req, res) => {
   }
 };
 
-// Admin: delete topic (and its questions)
+// DELETE /api/quizzes/topics/:topicId
 const deleteTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
@@ -145,7 +145,7 @@ const deleteTopic = async (req, res) => {
   }
 };
 
-// Admin: delete question
+// DELETE /api/quizzes/questions/:questionId
 const deleteQuestion = async (req, res) => {
   try {
     const { questionId } = req.params;
@@ -158,7 +158,7 @@ const deleteQuestion = async (req, res) => {
   }
 };
 
-// Admin: update topic
+// PUT /api/quizzes/topics/:topicId
 const updateTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
@@ -182,7 +182,7 @@ const updateTopic = async (req, res) => {
   }
 };
 
-// Admin: update question
+// PUT /api/quizzes/questions/:questionId
 const updateQuestion = async (req, res) => {
   try {
     const { questionId } = req.params;
@@ -215,7 +215,7 @@ const updateQuestion = async (req, res) => {
   }
 };
 
-// App: start or restart attempt
+// POST /api/quizzes/attempts
 const startAttempt = async (req, res) => {
   try {
     const { userId, topicId, restart } = req.body;
@@ -240,7 +240,7 @@ const startAttempt = async (req, res) => {
   }
 };
 
-// App: answer current question (resume-friendly)
+// POST /api/quizzes/attempts/:attemptId/answer
 const answerQuestion = async (req, res) => {
   try {
     const { attemptId } = req.params;
@@ -266,7 +266,7 @@ const answerQuestion = async (req, res) => {
   }
 };
 
-// App: get attempt (for resume)
+// GET /api/quizzes/attempts/:attemptId
 const getAttempt = async (req, res) => {
   try {
     const { attemptId } = req.params;

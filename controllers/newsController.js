@@ -1,6 +1,7 @@
 const { News } = require('../models');
 const paginate = require('../utils/pagination');
 
+// POST /api/news
 const createNews = async (req, res) => {
   try {
     const { organizationId, title, description, content, imageUrl, linkUrl, tags, isPublished, createdBy } = req.body;
@@ -28,6 +29,7 @@ const createNews = async (req, res) => {
   }
 };
 
+// GET /api/news
 const listNews = async (req, res) => {
   try {
     const { page, limit, organizationId, includeUnpublished } = req.query;
@@ -49,6 +51,7 @@ const listNews = async (req, res) => {
   }
 };
 
+// GET /api/news/:newsId
 const getNewsById = async (req, res) => {
   try {
     const { newsId } = req.params;
@@ -66,6 +69,7 @@ const getNewsById = async (req, res) => {
   }
 };
 
+// PUT /api/news/:newsId
 const updateNews = async (req, res) => {
   try {
     const { newsId } = req.params;
@@ -91,6 +95,7 @@ const updateNews = async (req, res) => {
   }
 };
 
+// DELETE /api/news/:newsId
 const deleteNews = async (req, res) => {
   try {
     const { newsId } = req.params;

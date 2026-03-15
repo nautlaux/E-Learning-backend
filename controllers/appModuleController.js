@@ -13,7 +13,7 @@ const DEFAULT_MODULES = {
   aiChat: true,
 };  
 
-/** GET /api/app-modules – dynamic module visibility for frontend */
+// GET /api/app-modules
 const getAppModules = async (req, res) => {
   try {
     const config = await AppModuleConfig.getSingleton();

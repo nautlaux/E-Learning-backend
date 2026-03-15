@@ -1,7 +1,7 @@
 const { ShortVideo } = require('../models');
 const paginate = require('../utils/pagination');
 
-/** Admin: create short video */
+// POST /api/short-videos
 const createShortVideo = async (req, res) => {
   try {
     const { organizationId, title, description, videoUrl, thumbnailUrl, durationSeconds, order, isActive } = req.body;
@@ -33,7 +33,7 @@ const createShortVideo = async (req, res) => {
   }
 };
 
-/** List short videos – app: current org + active only; admin: optional org + includeInactive */
+// GET /api/short-videos
 const listShortVideos = async (req, res) => {
   try {
     const { page, limit, organizationId: queryOrgId, includeInactive } = req.query;
@@ -63,7 +63,7 @@ const listShortVideos = async (req, res) => {
   }
 };
 
-/** Get one short video by id (app: only if active and same org) */
+// GET /api/short-videos/:videoId
 const getShortVideoById = async (req, res) => {
   try {
     const { videoId } = req.params;
@@ -87,7 +87,7 @@ const getShortVideoById = async (req, res) => {
   }
 };
 
-/** Admin: update short video */
+// PATCH /api/short-videos/:videoId
 const updateShortVideo = async (req, res) => {
   try {
     const { videoId } = req.params;
@@ -114,7 +114,7 @@ const updateShortVideo = async (req, res) => {
   }
 };
 
-/** Admin: delete short video */
+// DELETE /api/short-videos/:videoId
 const deleteShortVideo = async (req, res) => {
   try {
     const { videoId } = req.params;

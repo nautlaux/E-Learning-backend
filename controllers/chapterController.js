@@ -1,5 +1,6 @@
 const { Chapter, Course, Lesson } = require('../models');
 
+// GET /api/courses/:courseId/chapters
 const listChaptersByCourse = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -13,6 +14,7 @@ const listChaptersByCourse = async (req, res) => {
   }
 };
 
+// POST /api/courses/:courseId/chapters
 const createChapter = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -33,6 +35,7 @@ const createChapter = async (req, res) => {
   }
 };
 
+// PUT /api/courses/:courseId/chapters/:chapterId
 const updateChapter = async (req, res) => {
   try {
     const { courseId, chapterId } = req.params;
@@ -53,6 +56,7 @@ const updateChapter = async (req, res) => {
   }
 };
 
+// DELETE /api/courses/:courseId/chapters/:chapterId
 const deleteChapter = async (req, res) => {
   try {
     const { courseId, chapterId } = req.params;

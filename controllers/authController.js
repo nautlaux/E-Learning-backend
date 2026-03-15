@@ -41,7 +41,7 @@ const sendOtpPhoneNumber = async (email) => {
   });
 };
 
-// Unified auth: accepts mobile and role; returns whether user exists and sends OTP via MSG91
+// POST /api/auth
 const authWithOtp = async (req, res) => {
   try {
     const { mobile, role = 'USER' } = req.body;
@@ -50,6 +50,9 @@ const authWithOtp = async (req, res) => {
     }
 
     const user = await User.findOne({ mobile, role });
+    if (role === 'ORG_ADMIN' && !user) {
+      return res.status(404).json({ message: 'ORG_ADMIN user not found for this mobile' });
+    }
     const exists = !!user;
 
     const response = await sendOtpPhoneNumber(mobile);
@@ -76,7 +79,7 @@ const authWithOtp = async (req, res) => {
   }
 };
 
-// Verify OTP: accepts mobile+role or userId, static otp 1234
+// POST /api/auth/verify-otp
 const verifyOtp = async (req, res) => {
   try {
     const {
@@ -153,7 +156,7 @@ const verifyOtp = async (req, res) => {
   }
 };
 
-/** Refresh token: accepts expired or valid access token, returns new token. Frontend calls after TOKEN_EXPIRED. */
+// POST /api/auth/refresh
 const refreshToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;

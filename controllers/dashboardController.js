@@ -1,10 +1,7 @@
 const { CtoBanner, Course, Enrollment, Progress, FreeVideo, ShortVideo, DashboardConfig } = require('../models');
 const { defaultSections, defaultAddons } = require('./dashboardConfigController');
 
-/**
- * Single dashboard API: banners (CAROUSEL + INLINE), most popular courses,
- * recommended courses, and continue (start from where you left) with progress.
- */
+// GET /api/dashboard
 const getDashboard = async (req, res) => {
   try {
     const organizationId = req.user?.organizationId;

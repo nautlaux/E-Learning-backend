@@ -1,6 +1,6 @@
 const { User } = require('../models');
 
-// Create SALES user (for ORG_ADMIN usage)
+// POST /api/sales
 const createSalesUser = async (req, res) => {
   try {
     const { organizationId, name, email, mobile } = req.body;
@@ -29,7 +29,7 @@ const createSalesUser = async (req, res) => {
   }
 };
 
-// List SALES users, optionally filtered by organizationId
+// GET /api/sales
 const listSalesUsers = async (req, res) => {
   try {
     const { organizationId } = req.query;
@@ -44,7 +44,7 @@ const listSalesUsers = async (req, res) => {
   }
 };
 
-// Update SALES user fields (name, email, mobile, isActive)
+// PUT /api/sales/:userId
 const updateSalesUser = async (req, res) => {
   try {
     const { userId } = req.params;

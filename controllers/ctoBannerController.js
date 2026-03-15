@@ -1,6 +1,7 @@
 const { CtoBanner } = require('../models');
 const paginate = require('../utils/pagination');
 
+// POST /api/cto-banners
 const createCtoBanner = async (req, res) => {
   try {
     const { organizationId, title, description, ctaText, ctaUrl, imageUrl, isActive, createdBy } = req.body;
@@ -26,6 +27,7 @@ const createCtoBanner = async (req, res) => {
   }
 };
 
+// GET /api/cto-banners
 const listCtoBanners = async (req, res) => {
   try {
     const { page, limit, includeInactive } = req.query;
@@ -47,6 +49,7 @@ const listCtoBanners = async (req, res) => {
   }
 };
 
+// DELETE /api/cto-banners/:bannerId
 const deleteCtoBanner = async (req, res) => {
   try {
     const { bannerId } = req.params;

@@ -1,7 +1,7 @@
 const { CourseSubscription, User, Course } = require('../models');
 const paginate = require('../utils/pagination');
 
-// Create new course subscription (for salesmen)
+// POST /api/subscriptions
 const createSubscription = async (req, res) => {
   try {
     const { userId, courseId, organizationId, subscribedBy, startDate, endDate, notes } = req.body;
@@ -44,7 +44,7 @@ const createSubscription = async (req, res) => {
   }
 };
 
-// List subscriptions with filters and pagination
+// GET /api/subscriptions
 const listSubscriptions = async (req, res) => {
   try {
     const { page, limit, organizationId, status, userId, courseId } = req.query;
@@ -74,7 +74,7 @@ const listSubscriptions = async (req, res) => {
   }
 };
 
-// Get single subscription by ID
+// GET /api/subscriptions/:subscriptionId
 const getSubscription = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
@@ -96,7 +96,7 @@ const getSubscription = async (req, res) => {
   }
 };
 
-// Update subscription (extend dates, change status, etc.)
+// PUT /api/subscriptions/:subscriptionId
 const updateSubscription = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
@@ -127,7 +127,7 @@ const updateSubscription = async (req, res) => {
   }
 };
 
-// Cancel/Delete subscription
+// DELETE /api/subscriptions/:subscriptionId
 const cancelSubscription = async (req, res) => {
   try {
     const { subscriptionId } = req.params;
@@ -149,7 +149,38 @@ const cancelSubscription = async (req, res) => {
   }
 };
 
-// Get subscriptions for a specific user
+// GET /api/subscriptions/me/status
+const checkMySubscriptionStatus = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized', active: false });
+    }
+
+    const now = new Date();
+    const activeSubscriptions = await CourseSubscription.find({
+      userId,
+      status: 'ACTIVE',
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    })
+      .populate('courseId', 'title basePrice')
+      .lean();
+
+    const active = activeSubscriptions.length > 0;
+
+    return res.json({
+      active,
+      count: activeSubscriptions.length,
+      subscriptions: activeSubscriptions,
+    });
+  } catch (err) {
+    console.error('checkMySubscriptionStatus error:', err);
+    return res.status(500).json({ message: 'Internal server error', active: false });
+  }
+};
+
+// GET /api/subscriptions/user/:userId
 const getUserSubscriptions = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -182,5 +213,6 @@ module.exports = {
   getSubscription,
   updateSubscription,
   cancelSubscription,
+  checkMySubscriptionStatus,
   getUserSubscriptions,
 };
