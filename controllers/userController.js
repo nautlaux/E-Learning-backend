@@ -26,6 +26,7 @@ const getProfile = async (req, res) => {
       role: user.role,
       email: user.email ?? '',
       avatarUrl: user.avatarUrl ?? '',
+      interestedIn: user.interestedIn ?? '',
       stats: {
         activeCourses,
         completedCourses,
@@ -48,11 +49,12 @@ const updateProfile = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const { name, email, avatarUrl } = req.body;
+    const { name, email, avatarUrl, interestedIn } = req.body;
     const updates = {};
     if (name !== undefined) updates.name = String(name).trim();
     if (email !== undefined) updates.email = String(email).toLowerCase().trim();
     if (avatarUrl !== undefined) updates.avatarUrl = String(avatarUrl).trim();
+    if (interestedIn !== undefined) updates.interestedIn = String(interestedIn).toLowerCase().trim();
 
     const user = await User.findByIdAndUpdate(userId, { $set: updates }, { new: true, runValidators: true }).lean();
     if (!user) {
@@ -72,6 +74,7 @@ const updateProfile = async (req, res) => {
       role: user.role,
       email: user.email ?? '',
       avatarUrl: user.avatarUrl ?? '',
+      interestedIn: user.interestedIn ?? '',
       stats: { activeCourses, completedCourses, quizzesTaken },
     };
 
@@ -162,6 +165,7 @@ const listUsersAdmin = async (req, res) => {
       organizationId: u.organizationId,
       isActive: u.isActive,
       createdAt: u.createdAt,
+      interestedIn: u.interestedIn ?? '',
       courses: enrollmentMap.get(String(u._id)) || [],
     }));
 
@@ -241,6 +245,7 @@ const exportUsersAdmin = async (req, res) => {
       organizationId: u.organizationId,
       isActive: u.isActive,
       createdAt: u.createdAt,
+      interestedIn: u.interestedIn ?? '',
       courses: enrollmentMap.get(String(u._id)) || [],
     }));
 
