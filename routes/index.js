@@ -9,7 +9,7 @@ const salesRoutes = require('./sales');
 const subscriptionRoutes = require('./subscriptions');
 const dashboardRoutes = require('./dashboard');
 const progressRoutes = require('./progress');
-const analyticsRoutes = require('./analytics');
+const { publicAnalyticsRoutes, protectedAnalyticsRoutes } = require('./analytics');
 const newsRoutes = require('./news');
 const userRoutes = require('./user');
 const notificationRoutes = require('./notifications');
@@ -28,6 +28,7 @@ router.get('/health', (req, res) => {
 // Public routes (no auth required)
 router.use('/auth', authRoutes);
 router.post('/analytics/log-install', logInstall);
+router.use(publicAnalyticsRoutes);
 router.use('/app-modules', appModuleRoutes);
 
 // Protected routes (require JWT token)
@@ -40,7 +41,7 @@ router.use('/sales', authenticate, salesRoutes);
 router.use('/subscriptions', authenticate, subscriptionRoutes);
 router.use('/dashboard', authenticate, dashboardRoutes);
 router.use('/progress', authenticate, progressRoutes);
-router.use('/analytics', authenticate, analyticsRoutes);
+router.use('/analytics', authenticate, protectedAnalyticsRoutes);
 router.use('/news', authenticate, newsRoutes);
 router.use('/user', authenticate, userRoutes);
 router.use('/notifications', authenticate, notificationRoutes);

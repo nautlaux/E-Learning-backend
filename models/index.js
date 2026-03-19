@@ -18,6 +18,9 @@ const News = require('./News');
 const Notification = require('./Notification');
 const AppModuleConfig = require('./AppModuleConfig');
 const ShortVideo = require('./ShortVideo');
+const AnalyticsLogEvent = require('./AnalyticsLogEvent');
+const DailyAnalytics = require('./DailyAnalytics');
+const AnalyticsMeta = require('./AnalyticsMeta');
 
 module.exports = {
   Organization,
@@ -40,5 +43,8 @@ module.exports = {
   Notification,
   AppModuleConfig,
   ShortVideo,
+  AnalyticsLogEvent,
+  DailyAnalytics,
+  AnalyticsMeta,
 };
 
