@@ -131,13 +131,8 @@ function getMondayStartUTC(d) {
 // GET /api/analytics/installs?period=daily|weekly|monthly|yearly&date=YYYY-MM-DD&count=7
 const getInstallStats = async (req, res) => {
   try {
-    const organizationId = req.user?.organizationId || req.query.organizationId;
-    if (!organizationId) {
-      return res.status(400).json({ message: 'organizationId required' });
-    }
-
-    // Note: AnalyticsInstall model currently does not store organizationId.
-    // We still keep this signature for future compatibility.
+    // AnalyticsInstall doesn't store organizationId as a top-level field.
+    // So we aggregate installs globally (date-range only).
     const period = (req.query.period || 'daily').toLowerCase();
     const dateStr = req.query.date;
     const count = Math.max(1, Math.min(60, parseInt(req.query.count, 10) || 7));
@@ -187,11 +182,6 @@ const getInstallStats = async (req, res) => {
     const match = {
       timestamp: { $gte: rangeStart, $lt: rangeEnd },
     };
-    // AnalyticsInstall stores attribution inside `parameters` (Mixed), so we can optionally
-    // scope installs to an organization if the client included `parameters.organizationId`.
-    if (organizationId) {
-      match['parameters.organizationId'] = organizationId;
-    }
 
     const pipeline = [
       { $match: match },
