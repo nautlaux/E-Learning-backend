@@ -1,5 +1,5 @@
 const express = require('express');
-const { recordClicks, getHeatmap, getScreens, logEvent } = require('../controllers/analyticsController');
+const { recordClicks, getHeatmap, getScreens, logEvent, getInstallStats, getClicksSummary } = require('../controllers/analyticsController');
 const { AnalyticsLogEvent } = require('../models');
 
 const protectedAnalyticsRoutes = express.Router();
@@ -16,6 +16,12 @@ protectedAnalyticsRoutes.get('/heatmap', getHeatmap);
 
 // GET /api/analytics/screens
 protectedAnalyticsRoutes.get('/screens', getScreens);
+
+// GET /api/analytics/installs?period=daily|weekly|monthly|yearly&date=YYYY-MM-DD&count=7
+protectedAnalyticsRoutes.get('/installs', getInstallStats);
+
+// GET /api/analytics/clicks/summary?screenName=...&sectionKey=&from=&to=
+protectedAnalyticsRoutes.get('/clicks/summary', getClicksSummary);
 
 // POST /api/track (public bulk ingestion)
 publicAnalyticsRoutes.post('/track', async (req, res) => {

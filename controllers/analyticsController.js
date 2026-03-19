@@ -108,6 +108,204 @@ const getScreens = async (req, res) => {
   }
 };
 
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function formatUTCDate(d) {
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+}
+
+function formatUTCYearMonth(d) {
+  return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}`;
+}
+
+function getMondayStartUTC(d) {
+  // getUTCDay(): Sun=0, Mon=1 ... Sat=6
+  const day = d.getUTCDay();
+  const diffToMonday = (day + 6) % 7;
+  const ms = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return new Date(ms - diffToMonday * 24 * 60 * 60 * 1000);
+}
+
+// GET /api/analytics/installs?period=daily|weekly|monthly|yearly&date=YYYY-MM-DD&count=7
+const getInstallStats = async (req, res) => {
+  try {
+    const organizationId = req.user?.organizationId || req.query.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ message: 'organizationId required' });
+    }
+
+    // Note: AnalyticsInstall model currently does not store organizationId.
+    // We still keep this signature for future compatibility.
+    const period = (req.query.period || 'daily').toLowerCase();
+    const dateStr = req.query.date;
+    const count = Math.max(1, Math.min(60, parseInt(req.query.count, 10) || 7));
+
+    if (!dateStr) return res.status(400).json({ message: 'date is required' });
+    const baseDate = new Date(dateStr);
+    if (Number.isNaN(baseDate.getTime())) return res.status(400).json({ message: 'Invalid date' });
+
+    let rangeStart;
+    let rangeEnd;
+    const labels = [];
+
+    if (period === 'daily') {
+      rangeEnd = new Date(Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate() + 1));
+      rangeStart = new Date(rangeEnd.getTime() - (count - 1) * 24 * 60 * 60 * 1000);
+      for (let i = 0; i < count; i++) {
+        const d = new Date(rangeStart.getTime() + i * 24 * 60 * 60 * 1000);
+        labels.push(formatUTCDate(d));
+      }
+    } else if (period === 'weekly') {
+      const baseWeekStart = getMondayStartUTC(baseDate);
+      rangeEnd = new Date(baseWeekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+      rangeStart = new Date(rangeEnd.getTime() - (count - 1) * 7 * 24 * 60 * 60 * 1000);
+      for (let i = 0; i < count; i++) {
+        const d = new Date(rangeStart.getTime() + i * 7 * 24 * 60 * 60 * 1000);
+        labels.push(formatUTCDate(d));
+      }
+    } else if (period === 'monthly') {
+      const baseMonthStart = new Date(Date.UTC(baseDate.getUTCFullYear(), baseDate.getUTCMonth(), 1));
+      const baseNextMonthStart = new Date(Date.UTC(baseMonthStart.getUTCFullYear(), baseMonthStart.getUTCMonth() + 1, 1));
+      rangeEnd = baseNextMonthStart;
+      rangeStart = new Date(rangeEnd.getTime());
+      rangeStart.setUTCMonth(rangeStart.getUTCMonth() - (count - 1));
+      for (let i = 0; i < count; i++) {
+        const d = new Date(Date.UTC(baseMonthStart.getUTCFullYear(), baseMonthStart.getUTCMonth() - (count - 1) + i, 1));
+        labels.push(formatUTCYearMonth(d));
+      }
+    } else if (period === 'yearly') {
+      const year = baseDate.getUTCFullYear();
+      rangeEnd = new Date(Date.UTC(year + 1, 0, 1));
+      rangeStart = new Date(Date.UTC(year - (count - 1), 0, 1));
+      for (let y = year - (count - 1); y <= year; y++) labels.push(String(y));
+    } else {
+      return res.status(400).json({ message: 'Invalid period. Use daily|weekly|monthly|yearly' });
+    }
+
+    const match = {
+      timestamp: { $gte: rangeStart, $lt: rangeEnd },
+    };
+    // AnalyticsInstall stores attribution inside `parameters` (Mixed), so we can optionally
+    // scope installs to an organization if the client included `parameters.organizationId`.
+    if (organizationId) {
+      match['parameters.organizationId'] = organizationId;
+    }
+
+    const pipeline = [
+      { $match: match },
+    ];
+
+    if (period === 'daily') {
+      pipeline.push({
+        $project: { label: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp', timezone: 'UTC' } } },
+      });
+      pipeline.push({ $group: { _id: '$label', count: { $sum: 1 } } });
+    } else if (period === 'weekly') {
+      pipeline.push({
+        $project: {
+          weekStart: {
+            $dateSubtract: {
+              startDate: '$timestamp',
+              unit: 'day',
+              amount: {
+                $mod: [{ $add: [{ $dayOfWeek: '$timestamp' }, 5] }, 7],
+              },
+            },
+          },
+        },
+      });
+      pipeline.push({
+        $project: { label: { $dateToString: { format: '%Y-%m-%d', date: '$weekStart', timezone: 'UTC' } } },
+      });
+      pipeline.push({ $group: { _id: '$label', count: { $sum: 1 } } });
+    } else if (period === 'monthly') {
+      pipeline.push({
+        $project: { label: { $dateToString: { format: '%Y-%m', date: '$timestamp', timezone: 'UTC' } } },
+      });
+      pipeline.push({ $group: { _id: '$label', count: { $sum: 1 } } });
+    } else {
+      pipeline.push({
+        $project: { label: { $dateToString: { format: '%Y', date: '$timestamp', timezone: 'UTC' } } },
+      });
+      pipeline.push({ $group: { _id: '$label', count: { $sum: 1 } } });
+    }
+
+    const agg = await AnalyticsInstall.aggregate(pipeline);
+    const countMap = new Map(agg.map((x) => [x._id, x.count]));
+
+    const data = labels.map((label) => ({
+      label,
+      count: countMap.get(label) || 0,
+    }));
+
+    return res.json({
+      period,
+      date: dateStr,
+      count,
+      data,
+    });
+  } catch (err) {
+    console.error('getInstallStats error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// GET /api/analytics/clicks/summary?screenName=...&sectionKey=&from=&to=
+const getClicksSummary = async (req, res) => {
+  try {
+    const organizationId = req.user?.organizationId || req.query.organizationId;
+    if (!organizationId) {
+      return res.status(400).json({ message: 'organizationId required' });
+    }
+    const { screenName, sectionKey, from, to } = req.query;
+    if (!screenName) {
+      return res.status(400).json({ message: 'screenName is required' });
+    }
+
+    const filter = { organizationId, screenName };
+    if (sectionKey != null && sectionKey !== '') filter.sectionKey = String(sectionKey);
+    if (from || to) {
+      filter.createdAt = {};
+      if (from) filter.createdAt.$gte = new Date(from);
+      if (to) filter.createdAt.$lte = new Date(to);
+    }
+
+    const agg = await AnalyticsClick.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: null,
+          totalClicks: { $sum: 1 },
+          uniqueUsersSet: { $addToSet: '$userId' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalClicks: 1,
+          uniqueUsersCount: {
+            $size: {
+              $filter: {
+                input: '$uniqueUsersSet',
+                as: 'u',
+                cond: { $ne: ['$$u', null] },
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    const row = agg[0] || { totalClicks: 0, uniqueUsersCount: 0 };
+    return res.json({ screenName, sectionKey: sectionKey || '', ...row });
+  } catch (err) {
+    console.error('getClicksSummary error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // POST /api/analytics/log-event
 const logEvent = async (req, res) => {
   try {
@@ -174,4 +372,6 @@ module.exports = {
   getScreens,
   logEvent,
   logInstall,
+  getInstallStats,
+  getClicksSummary,
 };
