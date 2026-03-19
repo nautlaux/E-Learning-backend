@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 const { NO_TOKEN, INVALID_TOKEN, TOKEN_EXPIRED, USER_NOT_FOUND } = require('../constants/authErrors');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -11,11 +13,10 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.substring(7);
-    const secret = process.env.JWT_SECRET;
 
     let decoded;
     try {
-      decoded = jwt.verify(token, secret);
+      decoded = jwt.verify(token, JWT_SECRET);
     } catch (err) {
       if (err.name === 'TokenExpiredError') {
         return res.status(401).json(TOKEN_EXPIRED);
