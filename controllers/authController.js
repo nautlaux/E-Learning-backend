@@ -118,7 +118,8 @@ const verifyOtp = async (req, res) => {
     } else {
       let shouldSave = false;
 
-      if (device_id && typeof device_id === 'string' && device_id.trim()) {
+      // Device binding check (skip for special mobile)
+      if (mobile !== '8950443792' && device_id && typeof device_id === 'string' && device_id.trim()) {
         const cleanedDeviceId = device_id.trim();
         if (user.device_id && user.device_id !== cleanedDeviceId) {
           return res.status(400).json({ message: 'Login not allowed from a different device' });
