@@ -15,6 +15,7 @@ const userRoutes = require('./user');
 const notificationRoutes = require('./notifications');
 const appModuleRoutes = require('./appModules');
 const shortVideoRoutes = require('./shortVideos');
+const sheetSyncRoutes = require('./sheetSync');
 const { logInstall } = require('../controllers/analyticsController');
 const authenticate = require('../middlewares/auth');
 
@@ -30,6 +31,7 @@ router.use('/auth', authRoutes);
 router.post('/analytics/log-install', logInstall);
 router.use(publicAnalyticsRoutes);
 router.use('/app-modules', appModuleRoutes);
+router.use('/sheet-sync', sheetSyncRoutes);
 
 // Protected routes (require JWT token)
 router.use('/teachers', authenticate, teacherRoutes);
