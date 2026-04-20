@@ -21,6 +21,7 @@ const ShortVideo = require('./ShortVideo');
 const AnalyticsLogEvent = require('./AnalyticsLogEvent');
 const DailyAnalytics = require('./DailyAnalytics');
 const AnalyticsMeta = require('./AnalyticsMeta');
+const ExchangeRateCache = require('./ExchangeRateCache');
 
 module.exports = {
   Organization,
@@ -46,5 +47,6 @@ module.exports = {
   AnalyticsLogEvent,
   DailyAnalytics,
   AnalyticsMeta,
+  ExchangeRateCache,
 };
 
