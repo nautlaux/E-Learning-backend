@@ -41,7 +41,7 @@ router.use('/cto-banners', authenticate, ctoBannerRoutes);
 router.use('/quizzes', authenticate, quizRoutes);
 router.use('/sales', authenticate, salesRoutes);
 router.use('/subscriptions', authenticate, subscriptionRoutes);
-router.use('/dashboard', dashboardRoutes);
+router.use('/dashboard', authenticate, dashboardRoutes);
 router.use('/progress', authenticate, progressRoutes);
 router.use('/analytics', authenticate, protectedAnalyticsRoutes);
 router.use('/news', authenticate, newsRoutes);
