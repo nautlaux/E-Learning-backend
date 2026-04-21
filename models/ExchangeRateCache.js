@@ -5,6 +5,8 @@ const { Schema, model } = mongoose;
 const exchangeRateCacheSchema = new Schema(
   {
     base_code: { type: String, required: true, trim: true, uppercase: true, index: true },
+    // UTC date bucket. Ensures one snapshot per base per day.
+    date: { type: String, required: true, trim: true, index: true }, // YYYY-MM-DD
 
     result: { type: String, default: '' },
     documentation: { type: String, default: '' },
@@ -22,7 +24,8 @@ const exchangeRateCacheSchema = new Schema(
   { timestamps: true }
 );
 
-exchangeRateCacheSchema.index({ base_code: 1, time_last_update_unix: -1 });
+exchangeRateCacheSchema.index({ base_code: 1, date: 1 }, { unique: true });
+exchangeRateCacheSchema.index({ base_code: 1, date: -1 });
 
 module.exports = model('ExchangeRateCache', exchangeRateCacheSchema);
 
