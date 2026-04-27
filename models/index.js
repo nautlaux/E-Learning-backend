@@ -22,6 +22,11 @@ const AnalyticsLogEvent = require('./AnalyticsLogEvent');
 const DailyAnalytics = require('./DailyAnalytics');
 const AnalyticsMeta = require('./AnalyticsMeta');
 const ExchangeRateCache = require('./ExchangeRateCache');
+const FounderInfo = require('./FounderInfo');
+const JourneyConfig = require('./JourneyConfig');
+const UserJourneyProgress = require('./UserJourneyProgress');
+const ChatRoom = require('./ChatRoom');
+const ChatMessage = require('./ChatMessage');
 
 module.exports = {
   Organization,
@@ -48,5 +53,10 @@ module.exports = {
   DailyAnalytics,
   AnalyticsMeta,
   ExchangeRateCache,
+  FounderInfo,
+  JourneyConfig,
+  UserJourneyProgress,
+  ChatRoom,
+  ChatMessage,
 };
 

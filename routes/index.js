@@ -16,6 +16,9 @@ const notificationRoutes = require('./notifications');
 const appModuleRoutes = require('./appModules');
 const shortVideoRoutes = require('./shortVideos');
 const sheetSyncRoutes = require('./sheetSync');
+const founderRoutes = require('./founder');
+const journeyRoutes = require('./journey');
+const chatRoutes = require('./chat');
 const { logInstall } = require('../controllers/analyticsController');
 const authenticate = require('../middlewares/auth');
 
@@ -48,6 +51,9 @@ router.use('/news', authenticate, newsRoutes);
 router.use('/user', authenticate, userRoutes);
 router.use('/notifications', authenticate, notificationRoutes);
 router.use('/short-videos', authenticate, shortVideoRoutes);
+router.use('/founder', authenticate, founderRoutes);
+router.use('/journey', authenticate, journeyRoutes);
+router.use('/chat', authenticate, chatRoutes);
 
 module.exports = router;
 

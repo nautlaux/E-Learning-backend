@@ -8,6 +8,16 @@ const CRON_SCHEDULE = process.env.ANALYTICS_CRON_SCHEDULE || '*/10 * * * *'; // 
 
 let running = false;
 let scheduledJob = null;
+let indexesEnsured = false;
+
+async function ensureDailyAnalyticsIndexes() {
+  if (indexesEnsured) return;
+  // Ensure DB indexes match the current schema.
+  // This will drop obsolete indexes (like the old unique index on organizationId+event_name+date)
+  // and create the new unique index including param_key/param_value.
+  await DailyAnalytics.syncIndexes();
+  indexesEnsured = true;
+}
 
 async function getLastProcessedAt() {
   const existing = await AnalyticsMeta.findOne({ key: META_KEY }).lean();
@@ -282,6 +292,7 @@ async function aggregateAndUpsert({ windowStart, windowEnd }) {
 }
 
 async function runOnce() {
+  await ensureDailyAnalyticsIndexes();
   const windowStart = await getLastProcessedAt();
   const windowEnd = new Date();
 
