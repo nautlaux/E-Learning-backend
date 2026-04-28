@@ -131,7 +131,7 @@ const deleteRoom = async (req, res) => {
 };
 
 // GET /api/chat/rooms/:roomId/messages?cursor=<messageId>&limit=50
-// Privacy: never return senderUserId/phone/mobile.
+// Privacy: never return phone/mobile. senderId is allowed (internal user id).
 const listMessages = async (req, res) => {
   try {
     const organizationId = requireOrg(req, res);
@@ -162,6 +162,7 @@ const listMessages = async (req, res) => {
         .reverse()
         .map((m) => ({
           messageId: m._id,
+          senderId: m.senderUserId,
           senderName: m.senderName,
           message: m.message,
           timestamp: m.createdAt,
@@ -209,6 +210,7 @@ const postMessage = async (req, res) => {
       success: true,
       data: {
         messageId: saved._id,
+        senderId: saved.senderUserId,
         senderName: saved.senderName,
         message: saved.message,
         timestamp: saved.createdAt,
