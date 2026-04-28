@@ -1,6 +1,23 @@
 const { ChatRoom, ChatMessage, User } = require('../models');
 const { containsNumericLikeText } = require('../utils/regex');
 
+const formatIST = (date) => {
+  if (!date) return '';
+  // Example output: "2026-04-22 03:45:10 PM"
+  return new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  })
+    .format(date)
+    .replace(/\//g, '-'); // 22-04-2026, 03:45:10 pm -> keep consistent separators
+};
+
 const toSlug = (s) =>
   String(s || '')
     .trim()
@@ -166,7 +183,8 @@ const listMessages = async (req, res) => {
           senderId: m.senderUserId,
           senderName: m.senderName,
           message: m.message,
-          timestamp: m.createdAt,
+          timestamp: m.createdAt, // UTC Date
+          timestampIST: formatIST(m.createdAt),
           isAdmin: m.isAdmin,
         })),
       meta: { nextCursor },
@@ -217,7 +235,8 @@ const postMessage = async (req, res) => {
         senderId: saved.senderUserId,
         senderName: saved.senderName,
         message: saved.message,
-        timestamp: saved.createdAt,
+        timestamp: saved.createdAt, // UTC Date
+        timestampIST: formatIST(saved.createdAt),
         isAdmin: saved.isAdmin,
       },
     });
