@@ -1,4 +1,5 @@
 const { ChatRoom, ChatMessage, User } = require('../models');
+const { containsNumericLikeText } = require('../utils/regex');
 
 const toSlug = (s) =>
   String(s || '')
@@ -189,6 +190,9 @@ const postMessage = async (req, res) => {
     const { roomId } = req.params;
     const { message } = req.body || {};
     if (!message || !String(message).trim()) return res.status(400).json({ message: 'message is required' });
+    if (containsNumericLikeText(message)) {
+      return res.status(400).json({ message: 'Numbers are not allowed in chat messages' });
+    }
 
     const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
