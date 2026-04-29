@@ -29,6 +29,7 @@ const ChatRoom = require('./ChatRoom');
 const ChatMessage = require('./ChatMessage');
 const Testimonial = require('./Testimonial');
 const ChatRoomMembership = require('./ChatRoomMembership');
+const SocialLinksConfig = require('./SocialLinksConfig');
 
 module.exports = {
   Organization,
@@ -62,5 +63,6 @@ module.exports = {
   ChatMessage,
   Testimonial,
   ChatRoomMembership,
+  SocialLinksConfig,
 };
 
