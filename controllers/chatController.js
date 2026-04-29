@@ -40,9 +40,27 @@ const listRooms = async (req, res) => {
     const organizationId = requireOrg(req, res);
     if (!organizationId) return;
 
+    const userId = req.user?.userId;
+
     const rooms = await ChatRoom.find({ organizationId, isActive: true })
       .sort({ createdAt: 1 })
       .lean();
+
+    let membershipByRoomId = new Map();
+    if (userId) {
+      const roomIds = rooms.map((r) => r._id);
+      const memberships = await ChatRoomMembership.find({
+        organizationId,
+        userId,
+        roomId: { $in: roomIds },
+      })
+        .select({ roomId: 1, joinedAt: 1 })
+        .lean();
+
+      membershipByRoomId = new Map(
+        memberships.map((m) => [String(m.roomId), { joined: true, joinedAt: m.joinedAt }])
+      );
+    }
 
     return res.json({
       success: true,
@@ -51,6 +69,8 @@ const listRooms = async (req, res) => {
         name: r.name,
         slug: r.slug,
         isActive: r.isActive,
+        joined: membershipByRoomId.get(String(r._id))?.joined ?? false,
+        joinedAt: membershipByRoomId.get(String(r._id))?.joinedAt ?? null,
       })),
     });
   } catch (err) {
