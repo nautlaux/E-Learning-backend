@@ -28,6 +28,7 @@ const UserJourneyProgress = require('./UserJourneyProgress');
 const ChatRoom = require('./ChatRoom');
 const ChatMessage = require('./ChatMessage');
 const Testimonial = require('./Testimonial');
+const ChatRoomMembership = require('./ChatRoomMembership');
 
 module.exports = {
   Organization,
@@ -60,5 +61,6 @@ module.exports = {
   ChatRoom,
   ChatMessage,
   Testimonial,
+  ChatRoomMembership,
 };
 

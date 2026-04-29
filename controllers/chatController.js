@@ -1,4 +1,4 @@
-const { ChatRoom, ChatMessage, User } = require('../models');
+const { ChatRoom, ChatMessage, User, ChatRoomMembership } = require('../models');
 const { containsNumericLikeText } = require('../utils/regex');
 
 const formatIST = (date) => {
@@ -148,12 +148,50 @@ const deleteRoom = async (req, res) => {
   }
 };
 
+// POST /api/chat/rooms/:roomId/join
+// User must join before they can view new messages.
+const joinRoom = async (req, res) => {
+  try {
+    const organizationId = requireOrg(req, res);
+    if (!organizationId) return;
+
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    const { roomId } = req.params;
+
+    const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    const membership = await ChatRoomMembership.findOneAndUpdate(
+      { organizationId, roomId, userId },
+      { $setOnInsert: { joinedAt: new Date() } },
+      { upsert: true, new: true }
+    ).lean();
+
+    return res.json({
+      success: true,
+      data: {
+        roomId: membership.roomId,
+        userId: membership.userId,
+        joinedAt: membership.joinedAt,
+      },
+    });
+  } catch (err) {
+    console.error('joinRoom error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // GET /api/chat/rooms/:roomId/messages?cursor=<messageId>&limit=50
 // Privacy: never return phone/mobile. senderId is allowed (internal user id).
 const listMessages = async (req, res) => {
   try {
     const organizationId = requireOrg(req, res);
     if (!organizationId) return;
+
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const { roomId } = req.params;
     const limit = Math.max(1, Math.min(100, parseInt(req.query.limit, 10) || 50));
@@ -162,7 +200,19 @@ const listMessages = async (req, res) => {
     const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
+    // Join gating: users can only view messages after they click "Join"
+    const membership = await ChatRoomMembership.findOne({ organizationId, roomId, userId }).lean();
+    if (!membership) {
+      return res.json({
+        success: true,
+        data: [],
+        meta: { nextCursor: null },
+      });
+    }
+
     const filter = { organizationId, roomId };
+    // Only show messages created at/after joinedAt
+    filter.createdAt = { $gte: membership.joinedAt };
     if (cursor) {
       filter._id = { $lt: cursor };
     }
@@ -215,6 +265,12 @@ const postMessage = async (req, res) => {
     const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
+    // Join required to send new messages / view them.
+    const membership = await ChatRoomMembership.findOne({ organizationId, roomId, userId }).lean();
+    if (!membership) {
+      return res.status(403).json({ message: 'Please join the room first' });
+    }
+
     const user = await User.findById(userId).lean();
     const senderName = user?.name ? String(user.name).trim() : 'User';
     const isAdmin = role === 'ORG_ADMIN' || role === 'SUPER_ADMIN';
@@ -252,6 +308,7 @@ module.exports = {
   updateRoom,
   deleteRoom,
   listMessages,
+  joinRoom,
   postMessage,
 };
 

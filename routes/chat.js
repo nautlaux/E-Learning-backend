@@ -6,6 +6,7 @@ const {
   updateRoom,
   deleteRoom,
   listMessages,
+  joinRoom,
   postMessage,
 } = require('../controllers/chatController');
 
@@ -17,6 +18,7 @@ router.patch('/rooms/:roomId', requireOrgAdmin, updateRoom);
 router.delete('/rooms/:roomId', requireOrgAdmin, deleteRoom);
 
 router.get('/rooms/:roomId/messages', listMessages);
+router.post('/rooms/:roomId/join', joinRoom);
 router.post('/rooms/:roomId/messages', postMessage);
 
 module.exports = router;
