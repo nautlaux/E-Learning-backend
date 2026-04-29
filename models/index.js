@@ -32,6 +32,7 @@ const ChatRoomMembership = require('./ChatRoomMembership');
 const SocialLinksConfig = require('./SocialLinksConfig');
 const Seminar = require('./Seminar');
 const SeminarRegistration = require('./SeminarRegistration');
+const SeminarHomeConfig = require('./SeminarHomeConfig');
 
 module.exports = {
   Organization,
@@ -68,5 +69,6 @@ module.exports = {
   SocialLinksConfig,
   Seminar,
   SeminarRegistration,
+  SeminarHomeConfig,
 };
 
