@@ -19,6 +19,7 @@ const sheetSyncRoutes = require('./sheetSync');
 const founderRoutes = require('./founder');
 const journeyRoutes = require('./journey');
 const chatRoutes = require('./chat');
+const testimonialRoutes = require('./testimonials');
 const { logInstall } = require('../controllers/analyticsController');
 const authenticate = require('../middlewares/auth');
 
@@ -54,6 +55,7 @@ router.use('/short-videos', authenticate, shortVideoRoutes);
 router.use('/founder', authenticate, founderRoutes);
 router.use('/journey', authenticate, journeyRoutes);
 router.use('/chat', authenticate, chatRoutes);
+router.use('/testimonials', authenticate, testimonialRoutes);
 
 module.exports = router;
 
