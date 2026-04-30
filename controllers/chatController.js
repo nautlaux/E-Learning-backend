@@ -211,6 +211,7 @@ const listMessages = async (req, res) => {
     if (!organizationId) return;
 
     const userId = req.user?.userId;
+    const role = req.user?.role;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
     const { roomId } = req.params;
@@ -220,19 +221,22 @@ const listMessages = async (req, res) => {
     const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
-    // Join gating: users can only view messages after they click "Join"
-    const membership = await ChatRoomMembership.findOne({ organizationId, roomId, userId }).lean();
-    if (!membership) {
-      return res.json({
-        success: true,
-        data: [],
-        meta: { nextCursor: null },
-      });
-    }
-
     const filter = { organizationId, roomId };
-    // Only show messages created at/after joinedAt
-    filter.createdAt = { $gte: membership.joinedAt };
+    const isAdminRole = role === 'ORG_ADMIN' || role === 'SUPER_ADMIN';
+
+    if (!isAdminRole) {
+      // Join gating: normal users can only view messages after they click "Join"
+      const membership = await ChatRoomMembership.findOne({ organizationId, roomId, userId }).lean();
+      if (!membership) {
+        return res.json({
+          success: true,
+          data: [],
+          meta: { nextCursor: null },
+        });
+      }
+      // Only show messages created at/after joinedAt
+      filter.createdAt = { $gte: membership.joinedAt };
+    }
     if (cursor) {
       filter._id = { $lt: cursor };
     }
@@ -285,15 +289,24 @@ const postMessage = async (req, res) => {
     const room = await ChatRoom.findOne({ _id: roomId, organizationId, isActive: true }).lean();
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
-    // Join required to send new messages / view them.
+    const isAdminRole = role === 'ORG_ADMIN' || role === 'SUPER_ADMIN';
+
+    // Join required for normal users. Admins can post without joining; we auto-create membership.
     const membership = await ChatRoomMembership.findOne({ organizationId, roomId, userId }).lean();
     if (!membership) {
-      return res.status(403).json({ message: 'Please join the room first' });
+      if (!isAdminRole) {
+        return res.status(403).json({ message: 'Please join the room first' });
+      }
+      await ChatRoomMembership.updateOne(
+        { organizationId, roomId, userId },
+        { $setOnInsert: { joinedAt: new Date() } },
+        { upsert: true }
+      );
     }
 
     const user = await User.findById(userId).lean();
     const senderName = user?.name ? String(user.name).trim() : 'User';
-    const isAdmin = role === 'ORG_ADMIN' || role === 'SUPER_ADMIN';
+    const isAdmin = isAdminRole;
 
     const saved = await ChatMessage.create({
       organizationId,
