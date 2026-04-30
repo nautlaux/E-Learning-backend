@@ -2,7 +2,7 @@ const { Schema, model, Types } = require('mongoose');
 
 const socialLinksConfigSchema = new Schema(
   {
-    organizationId: { type: Types.ObjectId, ref: 'Organization', required: true, index: true },
+    organizationId: { type: Types.ObjectId, ref: 'Organization', required: true },
 
     whatsapp_number: { type: String, default: '', trim: true },
     youtube_url: { type: String, default: '', trim: true },

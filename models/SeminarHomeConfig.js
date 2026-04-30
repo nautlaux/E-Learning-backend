@@ -2,7 +2,7 @@ const { Schema, model, Types } = require('mongoose');
 
 const seminarHomeConfigSchema = new Schema(
   {
-    organizationId: { type: Types.ObjectId, ref: 'Organization', required: true, index: true },
+    organizationId: { type: Types.ObjectId, ref: 'Organization', required: true },
     achievements: { type: [String], default: [] },
     whatsapp_message: { type: String, default: '', trim: true },
     isActive: { type: Boolean, default: true },
