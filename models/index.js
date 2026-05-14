@@ -13,6 +13,7 @@ const QuizTopic = require('./QuizTopic');
 const QuizQuestion = require('./QuizQuestion');
 const QuizAttempt = require('./QuizAttempt');
 const CourseSubscription = require('./CourseSubscription');
+const PlatformPremiumAccess = require('./PlatformPremiumAccess');
 const DashboardConfig = require('./DashboardConfig');
 const News = require('./News');
 const Notification = require('./Notification');
@@ -50,6 +51,7 @@ module.exports = {
   QuizQuestion,
   QuizAttempt,
   CourseSubscription,
+  PlatformPremiumAccess,
   DashboardConfig,
   News,
   Notification,

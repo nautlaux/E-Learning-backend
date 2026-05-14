@@ -1,4 +1,5 @@
 const { User, Enrollment, Progress, QuizAttempt, Course } = require('../models');
+const { distinctUserIdsWithActivePremium } = require('../utils/distinctUserIdsWithActivePremium');
 
 // GET /api/user/profile
 const getProfile = async (req, res) => {
@@ -135,12 +136,16 @@ const listUsersAdmin = async (req, res) => {
     }
 
     const userIds = users.map((u) => u._id);
-    const enrollments = await Enrollment.find(
-      { userId: { $in: userIds } },
-      { userId: 1, courseId: 1, finalPricePaid: 1, status: 1 }
-    )
-      .populate('courseId', 'title basePrice')
-      .lean();
+    const now = new Date();
+    const [enrollments, premiumUserIds] = await Promise.all([
+      Enrollment.find(
+        { userId: { $in: userIds } },
+        { userId: 1, courseId: 1, finalPricePaid: 1, status: 1 }
+      )
+        .populate('courseId', 'title basePrice')
+        .lean(),
+      distinctUserIdsWithActivePremium(userIds, now),
+    ]);
 
     const enrollmentMap = new Map();
     for (const e of enrollments) {
@@ -166,6 +171,7 @@ const listUsersAdmin = async (req, res) => {
       isActive: u.isActive,
       createdAt: u.createdAt,
       interestedIn: u.interestedIn ?? '',
+      subscriptionTier: premiumUserIds.has(String(u._id)) ? 'premium' : 'free',
       courses: enrollmentMap.get(String(u._id)) || [],
     }));
 
@@ -215,12 +221,16 @@ const exportUsersAdmin = async (req, res) => {
     }
 
     const userIds = users.map((u) => u._id);
-    const enrollments = await Enrollment.find(
-      { userId: { $in: userIds } },
-      { userId: 1, courseId: 1, finalPricePaid: 1, status: 1 }
-    )
-      .populate('courseId', 'title basePrice')
-      .lean();
+    const now = new Date();
+    const [enrollments, premiumUserIds] = await Promise.all([
+      Enrollment.find(
+        { userId: { $in: userIds } },
+        { userId: 1, courseId: 1, finalPricePaid: 1, status: 1 }
+      )
+        .populate('courseId', 'title basePrice')
+        .lean(),
+      distinctUserIdsWithActivePremium(userIds, now),
+    ]);
 
     const enrollmentMap = new Map();
     for (const e of enrollments) {
@@ -246,6 +256,7 @@ const exportUsersAdmin = async (req, res) => {
       isActive: u.isActive,
       createdAt: u.createdAt,
       interestedIn: u.interestedIn ?? '',
+      subscriptionTier: premiumUserIds.has(String(u._id)) ? 'premium' : 'free',
       courses: enrollmentMap.get(String(u._id)) || [],
     }));
 

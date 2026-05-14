@@ -12,8 +12,8 @@ const userSchema = new Schema(
     // Last known FCM token for push notifications
     fcmToken: { type: String, default: '', trim: true },
     device_id: { type: String, default: '', trim: true },
-    // User interest: 'import' or 'export' (optional)
-    interestedIn: { type: String, enum: ['import', 'export', ''], default: '' },
+    // User interest: 'import', 'export', or 'both' (optional)
+    interestedIn: { type: String, enum: ['import', 'export', 'both', ''], default: '' },
   },
   { timestamps: true }
 );

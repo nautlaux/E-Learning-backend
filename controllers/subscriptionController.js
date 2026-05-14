@@ -1,4 +1,4 @@
-const { CourseSubscription, User, Course } = require('../models');
+const { CourseSubscription, User, Course, PlatformPremiumAccess } = require('../models');
 const paginate = require('../utils/pagination');
 
 // POST /api/subscriptions
@@ -158,21 +158,34 @@ const checkMySubscriptionStatus = async (req, res) => {
     }
 
     const now = new Date();
-    const activeSubscriptions = await CourseSubscription.find({
+    const windowFilter = {
       userId,
       status: 'ACTIVE',
       startDate: { $lte: now },
       endDate: { $gte: now },
-    })
-      .populate('courseId', 'title basePrice')
-      .lean();
+    };
 
-    const active = activeSubscriptions.length > 0;
+    const [activeSubscriptions, activePlatform] = await Promise.all([
+      CourseSubscription.find(windowFilter)
+        .populate('courseId', 'title basePrice')
+        .lean(),
+      PlatformPremiumAccess.findOne(windowFilter).sort({ endDate: -1 }).lean(),
+    ]);
+
+    const active = activeSubscriptions.length > 0 || Boolean(activePlatform);
 
     return res.json({
       active,
       count: activeSubscriptions.length,
       subscriptions: activeSubscriptions,
+      platformPremium: activePlatform
+        ? {
+            _id: activePlatform._id,
+            startDate: activePlatform.startDate,
+            endDate: activePlatform.endDate,
+            notes: activePlatform.notes,
+          }
+        : null,
     });
   } catch (err) {
     console.error('checkMySubscriptionStatus error:', err);
