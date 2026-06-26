@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const connectDB = async (uri = process.env.MONGODB_URI || 'mongodb+srv://industriesgoraksh:Unlucky%4097@allpricess-cluster.aluqd.mongodb.net/Courses') => {
+const connectDB = async (uri = process.env.MONGODB_URI) => {
   try {
     mongoose.set('strictQuery', true);
     await mongoose.connect(uri, {
