@@ -32,39 +32,72 @@ function initFirebase() {
   return firebaseApp;
 }
 
-function buildMessage({ token, tokens, title, body, data }) {
+function buildMessage({ token, tokens, title, body, imageUrl, data }) {
+  const notificationTitle = String(title || '');
+  const notificationBody = String(body || '');
+  const trimmedImageUrl = String(imageUrl || '').trim();
+
+  const mergedData = {
+    title: notificationTitle,
+    body: notificationBody,
+    ...(data && typeof data === 'object' ? data : {}),
+  };
+  if (trimmedImageUrl) {
+    mergedData.imageUrl = trimmedImageUrl;
+    mergedData.notificationStyle = 'big_picture';
+  }
+
   const payload = {
     notification: {
-      title: String(title || ''),
-      body: String(body || ''),
+      title: notificationTitle,
+      body: notificationBody,
     },
-    data: data && typeof data === 'object'
-      ? Object.fromEntries(
-          Object.entries(data).map(([k, v]) => [String(k), v == null ? '' : String(v)])
-        )
-      : {},
+    data: Object.fromEntries(
+      Object.entries(mergedData).map(([k, v]) => [String(k), v == null ? '' : String(v)])
+    ),
   };
+
+  if (trimmedImageUrl) {
+    // Image only in platform blocks (Firebase recommended). Top-level imageUrl
+    // often renders as a small thumbnail on the right in collapsed notifications.
+    payload.android = {
+      priority: 'high',
+      notification: {
+        imageUrl: trimmedImageUrl,
+      },
+    };
+    payload.apns = {
+      payload: {
+        aps: {
+          'mutable-content': 1,
+        },
+      },
+      fcm_options: {
+        image: trimmedImageUrl,
+      },
+    };
+  }
 
   if (token) return { token, ...payload };
   if (tokens) return { tokens, ...payload };
   throw new Error('token or tokens is required');
 }
 
-async function sendToToken({ token, title, body, data }) {
+async function sendToToken({ token, title, body, imageUrl, data }) {
   if (!token) return { success: false, skipped: true, reason: 'NO_TOKEN' };
   initFirebase();
 
-  const message = buildMessage({ token, title, body, data });
+  const message = buildMessage({ token, title, body, imageUrl, data });
   const messageId = await admin.messaging().send(message);
   return { success: true, messageId };
 }
 
-async function sendToTokens({ tokens, title, body, data }) {
+async function sendToTokens({ tokens, title, body, imageUrl, data }) {
   const list = Array.isArray(tokens) ? tokens.filter(Boolean) : [];
   if (!list.length) return { success: false, skipped: true, reason: 'NO_TOKENS' };
   initFirebase();
 
-  const message = buildMessage({ tokens: list, title, body, data });
+  const message = buildMessage({ tokens: list, title, body, imageUrl, data });
   const result = await admin.messaging().sendEachForMulticast(message);
 
   return {
@@ -79,14 +112,14 @@ async function sendToTokens({ tokens, title, body, data }) {
   };
 }
 
-async function sendToUserId({ userId, title, body, data }) {
+async function sendToUserId({ userId, title, body, imageUrl, data }) {
   if (!userId) return { success: false, skipped: true, reason: 'NO_USER_ID' };
 
   const user = await User.findById(userId).lean();
   const token = user?.fcmToken ? String(user.fcmToken).trim() : '';
   if (!token) return { success: false, skipped: true, reason: 'NO_FCM_TOKEN' };
 
-  return await sendToToken({ token, title, body, data });
+  return await sendToToken({ token, title, body, imageUrl, data });
 }
 
 module.exports = {

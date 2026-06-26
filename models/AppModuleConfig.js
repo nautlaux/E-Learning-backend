@@ -11,6 +11,7 @@ const appModuleConfigSchema = new Schema(
     news: { type: Boolean, default: true },
     banners: { type: Boolean, default: true },
     shortVideos:{ type: Boolean, default: true },
+    isAppOnline: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

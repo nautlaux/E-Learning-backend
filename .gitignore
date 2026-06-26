@@ -24,4 +24,8 @@ dist/
 build/
 .nyc_output/
 
+# Firebase service account (DO NOT COMMIT)
+*firebase-adminsdk*.json
+importexport-645ff-firebase-adminsdk-fbsvc-85d2506060.json
+
 

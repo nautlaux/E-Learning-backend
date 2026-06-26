@@ -1,5 +1,7 @@
 const express = require('express');
+const requireOrgAdmin = require('../middlewares/requireOrgAdmin');
 const {
+  broadcastNotification,
   createNotification,
   listMyNotifications,
   getUnreadCount,
@@ -9,7 +11,8 @@ const {
 
 const router = express.Router();
 
-router.post('/', createNotification);
+router.post('/broadcast', requireOrgAdmin, broadcastNotification);
+router.post('/', requireOrgAdmin, createNotification);
 router.get('/', listMyNotifications);
 router.get('/unread-count', getUnreadCount);
 router.patch('/read-all', markAllAsRead);

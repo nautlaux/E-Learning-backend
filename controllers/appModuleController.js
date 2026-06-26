@@ -9,8 +9,9 @@ const DEFAULT_MODULES = {
   tools: true,
   news: true,
   banners: true,
-  shortVideos: true, 
+  shortVideos: true,
   aiChat: true,
+  isAppOnline: true,
 };  
 
 // GET /api/app-modules
@@ -28,7 +29,8 @@ const getAppModules = async (req, res) => {
           news: config.news ?? DEFAULT_MODULES.news,
           banners: config.banners ?? DEFAULT_MODULES.banners,
           shortVideos: config.shortVideos ?? DEFAULT_MODULES.shortVideos,
-          aiChat : config.aiChat ?? DEFAULT_MODULES.aiChat,
+          aiChat: config.aiChat ?? DEFAULT_MODULES.aiChat,
+          isAppOnline: config.isAppOnline ?? DEFAULT_MODULES.isAppOnline,
         }
       : { ...DEFAULT_MODULES };
 
