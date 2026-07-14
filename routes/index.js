@@ -22,6 +22,7 @@ const chatRoutes = require('./chat');
 const testimonialRoutes = require('./testimonials');
 const configRoutes = require('./config');
 const seminarRoutes = require('./seminars');
+const assistantRoutes = require('./assistant');
 const { logInstall } = require('../controllers/analyticsController');
 const authenticate = require('../middlewares/auth');
 
@@ -60,6 +61,7 @@ router.use('/chat', authenticate, chatRoutes);
 router.use('/testimonials', authenticate, testimonialRoutes);
 router.use('/config', authenticate, configRoutes);
 router.use('/seminars', authenticate, seminarRoutes);
+router.use('/assistant', authenticate, assistantRoutes);
 
 module.exports = router;
 

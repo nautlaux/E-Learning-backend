@@ -34,6 +34,9 @@ const SocialLinksConfig = require('./SocialLinksConfig');
 const Seminar = require('./Seminar');
 const SeminarRegistration = require('./SeminarRegistration');
 const SeminarHomeConfig = require('./SeminarHomeConfig');
+const AssistantStarterConfig = require('./AssistantStarterConfig');
+const AssistantConversation = require('./AssistantConversation');
+const AssistantMessage = require('./AssistantMessage');
 
 module.exports = {
   Organization,
@@ -72,5 +75,8 @@ module.exports = {
   Seminar,
   SeminarRegistration,
   SeminarHomeConfig,
+  AssistantStarterConfig,
+  AssistantConversation,
+  AssistantMessage,
 };
 
