@@ -2,9 +2,7 @@ const { Types } = require('mongoose');
 const { Notification, User } = require('../models');
 const paginate = require('../utils/pagination');
 const { distinctUserIdsWithActivePremium } = require('../utils/distinctUserIdsWithActivePremium');
-const { sendToTokens } = require('../utils/notificationHelper');
-
-const FCM_BATCH_SIZE = 500;
+const { sendPushBatches } = require('../services/newsNotify');
 
 function startOfDay(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -59,27 +57,6 @@ async function resolveTargetUserIds({ audience, customUsers, newUser, interested
   return userIds;
 }
 
-async function sendPushBatches(tokens, { title, body, imageUrl }) {
-  const list = Array.isArray(tokens) ? tokens.filter(Boolean) : [];
-  if (!list.length) {
-    return { successCount: 0, failureCount: 0, skipped: true, reason: 'NO_TOKENS' };
-  }
-
-  let successCount = 0;
-  let failureCount = 0;
-
-  for (let i = 0; i < list.length; i += FCM_BATCH_SIZE) {
-    const batch = list.slice(i, i + FCM_BATCH_SIZE);
-    const result = await sendToTokens({ tokens: batch, title, body, imageUrl });
-    if (result.success) {
-      successCount += result.successCount || 0;
-      failureCount += result.failureCount || 0;
-    }
-  }
-
-  return { successCount, failureCount };
-}
-
 // POST /api/notifications/broadcast (admin)
 const broadcastNotification = async (req, res) => {
   try {
@@ -93,11 +70,28 @@ const broadcastNotification = async (req, res) => {
       message,
       body,
       imageUrl,
+      newsId,
+      linkUrl,
+      data,
     } = req.body;
 
     const notificationTitle = String(title || '').trim();
     const notificationBody = String(message ?? body ?? '').trim();
     const notificationImageUrl = String(imageUrl || '').trim();
+    const resolvedNewsId = String(newsId || data?.newsId || '').trim();
+    const notificationData =
+      data && typeof data === 'object'
+        ? { ...data }
+        : resolvedNewsId
+          ? { type: 'news', newsId: resolvedNewsId }
+          : null;
+    if (resolvedNewsId) {
+      notificationData.type = notificationData.type || 'news';
+      notificationData.newsId = resolvedNewsId;
+    }
+    const notificationLinkUrl = String(
+      linkUrl || (resolvedNewsId ? `news://${resolvedNewsId}` : '')
+    ).trim();
 
     if (!notificationTitle || !notificationBody) {
       return res.status(400).json({ message: 'title and message are required' });
@@ -134,6 +128,8 @@ const broadcastNotification = async (req, res) => {
       title: notificationTitle,
       body: notificationBody,
       imageUrl: notificationImageUrl,
+      linkUrl: notificationLinkUrl,
+      data: notificationData,
       source: 'ADMIN_PANEL',
     }));
 
@@ -150,6 +146,7 @@ const broadcastNotification = async (req, res) => {
       title: notificationTitle,
       body: notificationBody,
       imageUrl: notificationImageUrl,
+      data: notificationData || undefined,
     });
 
     return res.status(201).json({

@@ -57,15 +57,27 @@ const getNewsById = async (req, res) => {
     const { newsId } = req.params;
     const news = await News.findById(newsId).lean();
     if (!news) {
-      return res.status(404).json({ message: 'News not found' });
+      return res.status(404).json({ success: false, message: 'News not found' });
     }
     if (!news.isPublished && req.query.includeUnpublished !== 'true') {
-      return res.status(404).json({ message: 'News not found' });
+      return res.status(404).json({ success: false, message: 'News not found' });
     }
-    return res.json(news);
+    return res.json({
+      success: true,
+      data: {
+        _id: news._id,
+        title: news.title,
+        description: news.description,
+        content: news.content,
+        imageUrl: news.imageUrl,
+        linkUrl: news.linkUrl,
+        tags: news.tags,
+        createdAt: news.createdAt,
+      },
+    });
   } catch (err) {
     console.error('getNewsById error:', err);
-    return res.status(500).json({ message: 'Internal server error' });
+    return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 

@@ -2,6 +2,7 @@ require('dotenv').config();
 const app = require('./app');
 const connectDB = require('./config/db');
 const { startAnalyticsCron } = require('./jobs/analyticsCron');
+const { startNewsCron } = require('./jobs/newsCron');
 const http = require('http');
 const { Server } = require('socket.io');
 const { registerChatSocket } = require('./sockets/chatSocket');
@@ -12,6 +13,7 @@ const startServer = async () => {
   try {
     await connectDB();
     startAnalyticsCron();
+    startNewsCron();
     const server = http.createServer(app);
 
     const io = new Server(server, {

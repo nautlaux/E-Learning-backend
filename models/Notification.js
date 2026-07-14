@@ -7,7 +7,7 @@ const notificationSchema = new Schema(
     body: { type: String, default: '' },
     source: {
       type: String,
-      enum: ['ADMIN_PANEL', 'FIREBASE', 'CUSTOM'],
+      enum: ['ADMIN_PANEL', 'FIREBASE', 'CUSTOM', 'NEWS_AUTO'],
       default: 'CUSTOM',
     },
     read: { type: Boolean, default: false },
